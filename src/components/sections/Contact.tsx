@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect, FormEvent } from "react";
 import gsap from "gsap";
 import { useGSAP, useMagneticElement } from "@/hooks/useGSAP";
@@ -14,14 +15,20 @@ const Contact = () => {
   const contactRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const socialRef = useMagneticElement({ strength: 0.2, ease: 0.3 });
+  const hasAnimatedRef = useRef(false);
   
   const headingRef = useGSAP('.contact-heading', {
-    scrollTrigger: true,
+    scrollTrigger: {
+      trigger: '.contact-heading',
+      start: "top 80%",
+      once: true // Ensure it only runs once
+    },
     animation: "creative"
   });
   
   useEffect(() => {
-    if (!contactRef.current) return;
+    if (!contactRef.current || hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
     
     const ctx = gsap.context(() => {
       // Animate contact form and info - only trigger once per element
@@ -37,12 +44,13 @@ const Contact = () => {
           scrollTrigger: {
             trigger: '.contact-container',
             start: "top 80%",
-            toggleActions: "play none none none" // only plays once
+            toggleActions: "play none none none", // only plays once
+            once: true // Critical: ensure it only runs once
           }
         }
       );
       
-      // Create floating animation for background elements
+      // Create floating animation for background elements - runs continuously
       const bgElements = contactRef.current.querySelectorAll('.bg-element');
       
       bgElements.forEach((el, i) => {
@@ -57,7 +65,7 @@ const Contact = () => {
         });
       });
       
-      // Create hover effect for form inputs without repeated animations
+      // Create hover effect for form inputs - only set up once, safe for mouse movement
       const formElements = contactRef.current.querySelectorAll('.form-element');
       
       formElements.forEach((el) => {
@@ -407,4 +415,3 @@ const Contact = () => {
 };
 
 export default Contact;
-

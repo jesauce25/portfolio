@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -23,13 +22,22 @@ const Hero = () => {
   const nameArray = "Hello, I'm".split("");
   const jobArray = "Frontend Developer".split("");
   const codePanelRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
   
   useEffect(() => {
-    if (!heroRef.current) return;
+    if (!heroRef.current || hasAnimatedRef.current) return;
     
     const ctx = gsap.context(() => {
-      // Initial load animation
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+      hasAnimatedRef.current = true;
+      
+      // Initial load animation - only runs once
+      const tl = gsap.timeline({ 
+        defaults: { ease: "power4.out" },
+        onComplete: () => {
+          // Make sure we don't re-run this animation
+          hasAnimatedRef.current = true;
+        }
+      });
       
       tl.fromTo(
         '.hero-heading-1',
@@ -80,7 +88,7 @@ const Hero = () => {
         "-=0.3"
       );
       
-      // Typing effect for code panel
+      // Typing effect for code panel - only runs once
       if (codePanelRef.current) {
         const codeText = codePanelRef.current.querySelector('.code-text');
         if (codeText) {
@@ -103,7 +111,7 @@ const Hero = () => {
         }
       }
       
-      // Background elements animation
+      // Background elements animation - using one-time timeline
       gsap.fromTo(
         '.bg-element',
         { 
@@ -121,7 +129,7 @@ const Hero = () => {
         }
       );
       
-      // Setup scroll animation for floating elements
+      // Setup scroll animation for floating elements - using ScrollTrigger once
       gsap.to('.float-elements', {
         y: -50,
         ease: "none",
@@ -129,7 +137,8 @@ const Hero = () => {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: true
+          scrub: true,
+          once: true
         }
       });
       

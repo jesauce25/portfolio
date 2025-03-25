@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -8,8 +7,14 @@ import { Code, Layout, Sparkles, Terminal, Zap, Monitor, Smile } from "lucide-re
 const About = () => {
   const aboutRef = useRef<HTMLDivElement>(null);
   const imageBoxRef = useMagneticElement({ strength: 0.15 });
+  const hasAnimatedRef = useRef(false);
+  
   const headingRef = useGSAP('.about-heading', {
-    scrollTrigger: true,
+    scrollTrigger: {
+      trigger: '.about-heading',
+      start: "top 80%",
+      once: true
+    },
     animation: "creative"
   });
   
@@ -32,13 +37,14 @@ const About = () => {
   ];
   
   useEffect(() => {
-    if (!aboutRef.current) return;
+    if (!aboutRef.current || hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
     
     const ctx = gsap.context(() => {
       // Register ScrollTrigger
       ScrollTrigger.refresh();
       
-      // Animate the image reveal with mask effect
+      // Animate the image reveal with mask effect - using once flag
       const imageReveal = aboutRef.current.querySelector('.image-reveal');
       const image = aboutRef.current.querySelector('.about-image');
       
@@ -54,12 +60,13 @@ const About = () => {
               trigger: imageReveal,
               start: "top 80%",
               end: "bottom 20%",
-              toggleActions: "play none none none"
+              toggleActions: "play none none none",
+              once: true // Only play once
             }
           }
         );
         
-        // Parallax effect on image
+        // Parallax effect on image - only once
         gsap.fromTo(
           image,
           { scale: 1.2, rotation: -5 },
@@ -72,13 +79,14 @@ const About = () => {
               trigger: imageReveal,
               start: "top 80%",
               end: "bottom 20%",
-              toggleActions: "play none none none"
+              toggleActions: "play none none none",
+              once: true // Only play once
             }
           }
         );
       }
       
-      // Animate skill cards
+      // Animate skill cards - only once
       const skillCards = aboutRef.current.querySelectorAll('.skill-card');
       
       gsap.fromTo(
@@ -94,12 +102,13 @@ const About = () => {
           scrollTrigger: {
             trigger: '.skills-container',
             start: "top 80%",
-            toggleActions: "play none none none"
+            toggleActions: "play none none none",
+            once: true // Only play once
           }
         }
       );
       
-      // Code snippets typing effect
+      // Code snippets typing effect - only once
       const codeLines = aboutRef.current.querySelectorAll('.code-line');
       
       codeLines.forEach((line, index) => {
@@ -115,13 +124,14 @@ const About = () => {
             scrollTrigger: {
               trigger: '.about-code',
               start: "top 80%",
-              toggleActions: "play none none none"
+              toggleActions: "play none none none",
+              once: true // Only play once
             }
           }
         );
       });
       
-      // Floating particles effect
+      // Floating particles effect - continuous animation, this is fine
       const particles = aboutRef.current.querySelectorAll('.particle');
       
       particles.forEach((particle, index) => {
@@ -152,7 +162,7 @@ const About = () => {
     return () => ctx.revert();
   }, []);
   
-  // Handle tab switching animation
+  // Handle tab switching animation - single animation per tab change, not mouse movement related
   useEffect(() => {
     if (!tabContentRef.current) return;
     

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useGSAP } from "@/hooks/useGSAP";
 import { Menu, X } from "lucide-react";
@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const animatedRef = useRef(false);
   
   const navRef = useGSAP('.nav-item', {
     animateFrom: { y: -20, opacity: 0 },

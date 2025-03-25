@@ -48,9 +48,13 @@ type GSAPOptions = {
  */
 export function useGSAP(selector: string, options: GSAPOptions = {}) {
   const componentRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
   
   useEffect(() => {
     if (!componentRef.current) return;
+    
+    // Skip if already animated - prevent repeated animations
+    if (hasAnimatedRef.current) return;
     
     const element = componentRef.current;
     const targets = element.querySelectorAll(selector);
@@ -167,16 +171,22 @@ export function useGSAP(selector: string, options: GSAPOptions = {}) {
     const animConfig = createAnimationConfig();
     
     let ctx = gsap.context(() => {
+      // Create a single timeline for all animations
       const tl = gsap.timeline({
         scrollTrigger: scrollTrigger === true 
           ? {
               trigger: element,
               start: "top 80%",
-              toggleActions: "play none none none"
+              toggleActions: "play none none none", // Only play once
+              once: true // Critical: ensures the animation only runs ONCE
             }
           : typeof scrollTrigger === 'object'
-            ? scrollTrigger
-            : undefined
+            ? { ...scrollTrigger, once: true } // Add once: true to ensure it only plays once
+            : undefined,
+        onComplete: () => {
+          // Mark as animated after completion
+          hasAnimatedRef.current = true;
+        }
       });
       
       tl.fromTo(
@@ -190,7 +200,7 @@ export function useGSAP(selector: string, options: GSAPOptions = {}) {
           delay: delay,
           ease: ease,
           stagger: stagger,
-          clearProps: "all",
+          clearProps: "transform,opacity", // Clear props after animation to prevent conflicts
           onStart: animConfig.to.onStart
         }
       );

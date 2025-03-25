@@ -24,6 +24,7 @@ const Index = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorTextRef = useRef<HTMLDivElement>(null);
   const blobsRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
   
   // Handle cursor and blobs movement
   useEffect(() => {
@@ -58,44 +59,49 @@ const Index = () => {
       ease: "power2.out",
     });
     
-    // Add hover effect for interactive elements
-    const handleMouseEnter = () => {
-      gsap.to(cursor, {
-        scale: 1.5,
-        backgroundColor: "rgba(142, 53, 239, 0.3)",
-        border: "1px solid rgba(142, 53, 239, 0.6)",
-        duration: 0.3,
-      });
-      gsap.to(cursorText, { opacity: 1, duration: 0.3 });
-    };
-    
-    const handleMouseLeave = () => {
-      gsap.to(cursor, {
-        scale: 1,
-        backgroundColor: "rgba(142, 53, 239, 0.1)",
-        border: "1px solid rgba(142, 53, 239, 0.3)",
-        duration: 0.3,
-      });
-      gsap.to(cursorText, { opacity: 0, duration: 0.3 });
-    };
-    
-    const interactiveElements = document.querySelectorAll('a, button, .interactive');
-    interactiveElements.forEach((el) => {
-      el.addEventListener('mouseenter', handleMouseEnter);
-      el.addEventListener('mouseleave', handleMouseLeave);
-    });
-    
-    return () => {
+    // Only set up hover effects once to prevent animation restarts
+    if (!hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      
+      // Add hover effect for interactive elements
+      const handleMouseEnter = () => {
+        gsap.to(cursor, {
+          scale: 1.5,
+          backgroundColor: "rgba(142, 53, 239, 0.3)",
+          border: "1px solid rgba(142, 53, 239, 0.6)",
+          duration: 0.3,
+        });
+        gsap.to(cursorText, { opacity: 1, duration: 0.3 });
+      };
+      
+      const handleMouseLeave = () => {
+        gsap.to(cursor, {
+          scale: 1,
+          backgroundColor: "rgba(142, 53, 239, 0.1)",
+          border: "1px solid rgba(142, 53, 239, 0.3)",
+          duration: 0.3,
+        });
+        gsap.to(cursorText, { opacity: 0, duration: 0.3 });
+      };
+      
+      const interactiveElements = document.querySelectorAll('a, button, .interactive');
       interactiveElements.forEach((el) => {
-        el.removeEventListener('mouseenter', handleMouseEnter);
-        el.removeEventListener('mouseleave', handleMouseLeave);
+        el.addEventListener('mouseenter', handleMouseEnter);
+        el.addEventListener('mouseleave', handleMouseLeave);
       });
-    };
+      
+      return () => {
+        interactiveElements.forEach((el) => {
+          el.removeEventListener('mouseenter', handleMouseEnter);
+          el.removeEventListener('mouseleave', handleMouseLeave);
+        });
+      };
+    }
   }, [mousePosition]);
   
-  // Create floating blobs
+  // Create floating blobs - only set up once
   useEffect(() => {
-    if (!blobsRef.current) return;
+    if (!blobsRef.current || hasAnimatedRef.current) return;
     
     const blobs = blobsRef.current;
     const blobsCtx = gsap.context(() => {
@@ -141,7 +147,7 @@ const Index = () => {
     return () => blobsCtx.revert();
   }, []);
   
-  // Animate section transitions
+  // Animate section transitions - using once flag to prevent re-animations
   useEffect(() => {
     if (!mainRef.current) return;
     
@@ -157,9 +163,9 @@ const Index = () => {
         scrub: 1,
       });
       
-      // Section parallax effects
+      // Section parallax effects - with once flag
       gsap.utils.toArray<HTMLElement>('section').forEach((section, i) => {
-        // Section entrance animation
+        // Section entrance animation - only once
         gsap.fromTo(
           section,
           { opacity: 0, y: 50 },
@@ -173,11 +179,12 @@ const Index = () => {
               end: "top 50%",
               scrub: 1,
               toggleActions: "play none none reverse",
+              once: true // Critical: only play once
             }
           }
         );
         
-        // Background items parallax
+        // Background items parallax - continuous effect based on scroll
         const bgElements = section.querySelectorAll('.parallax-bg');
         if (bgElements.length) {
           bgElements.forEach((el, index) => {
