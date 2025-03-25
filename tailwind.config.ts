@@ -22,6 +22,7 @@ export default {
 			fontFamily: {
 				sans: ['Inter', 'system-ui', 'sans-serif'],
 				display: ['SF Pro Display', 'Inter', 'system-ui', 'sans-serif'],
+				mono: ['Fira Code', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -84,6 +85,28 @@ export default {
 					from: { transform: 'translateX(-20px)', opacity: '0' },
 					to: { transform: 'translateX(0)', opacity: '1' }
 				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'rotate-slow': {
+					from: { transform: 'rotate(0deg)' },
+					to: { transform: 'rotate(360deg)' }
+				},
+				'glitch': {
+					'0%': { transform: 'translate(0)' },
+					'20%': { transform: 'translate(-2px, 2px)' },
+					'40%': { transform: 'translate(-2px, -2px)' },
+					'60%': { transform: 'translate(2px, 2px)' },
+					'80%': { transform: 'translate(2px, -2px)' },
+					'100%': { transform: 'translate(0)' }
+				},
+				'morph': {
+					'0%, 100%': { 'border-radius': '60% 40% 30% 70% / 60% 30% 70% 40%' },
+					'25%': { 'border-radius': '40% 60% 70% 30% / 30% 60% 40% 70%' },
+					'50%': { 'border-radius': '30% 70% 40% 60% / 70% 40% 60% 30%' },
+					'75%': { 'border-radius': '70% 30% 60% 40% / 40% 70% 30% 60%' }
+				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -91,6 +114,10 @@ export default {
 				'fade-in': 'fade-in 0.5s ease-out forwards',
 				'fade-out': 'fade-out 0.5s ease-out forwards',
 				'slide-in': 'slide-in 0.5s ease-out forwards',
+				'float': 'float 5s ease-in-out infinite',
+				'rotate-slow': 'rotate-slow 15s linear infinite',
+				'glitch': 'glitch 0.5s ease infinite',
+				'morph': 'morph 8s ease-in-out infinite'
 			}
 		}
 	},
