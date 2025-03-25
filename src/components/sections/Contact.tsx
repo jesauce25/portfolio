@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect, FormEvent } from "react";
 import gsap from "gsap";
 import { useGSAP, useMagneticElement } from "@/hooks/useGSAP";
@@ -14,7 +13,7 @@ const Contact = () => {
   
   const contactRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const socialRef = useMagneticElement({ strength: 0.2 });
+  const socialRef = useMagneticElement({ strength: 0.2, ease: 0.3 });
   
   const headingRef = useGSAP('.contact-heading', {
     scrollTrigger: true,
@@ -25,7 +24,7 @@ const Contact = () => {
     if (!contactRef.current) return;
     
     const ctx = gsap.context(() => {
-      // Animate contact form and info
+      // Animate contact form and info - only trigger once per element
       gsap.fromTo(
         '.contact-item',
         { y: 50, opacity: 0 },
@@ -38,7 +37,7 @@ const Contact = () => {
           scrollTrigger: {
             trigger: '.contact-container',
             start: "top 80%",
-            toggleActions: "play none none none"
+            toggleActions: "play none none none" // only plays once
           }
         }
       );
@@ -58,27 +57,41 @@ const Contact = () => {
         });
       });
       
-      // Create hover effect for form inputs
+      // Create hover effect for form inputs without repeated animations
       const formElements = contactRef.current.querySelectorAll('.form-element');
       
       formElements.forEach((el) => {
+        let isAnimating = false;
+        
         el.addEventListener('mouseenter', () => {
+          if (isAnimating) return;
+          isAnimating = true;
+          
           gsap.to(el, {
             y: -5,
             scale: 1.02,
             boxShadow: '0 10px 25px -10px rgba(0, 0, 0, 0.1)',
             duration: 0.3,
-            ease: "power2.out"
+            ease: "power2.out",
+            onComplete: () => {
+              isAnimating = false;
+            }
           });
         });
         
         el.addEventListener('mouseleave', () => {
+          if (isAnimating) return;
+          isAnimating = true;
+          
           gsap.to(el, {
             y: 0,
             scale: 1,
             boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
             duration: 0.3,
-            ease: "power2.out"
+            ease: "power2.out",
+            onComplete: () => {
+              isAnimating = false;
+            }
           });
         });
       });
@@ -394,3 +407,4 @@ const Contact = () => {
 };
 
 export default Contact;
+

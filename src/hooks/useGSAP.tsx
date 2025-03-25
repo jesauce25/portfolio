@@ -33,6 +33,7 @@ type GSAPOptions = {
     rotationY?: number;
     rotation?: number;
     stagger?: number | object;
+    onStart?: (elements: Element[]) => void;
   };
   delay?: number;
   duration?: number;
@@ -97,9 +98,10 @@ export function useGSAP(selector: string, options: GSAPOptions = {}) {
               y: 0, 
               skewX: 0, 
               skewY: 0,
-              onStart: (elements: Element[]) => {
+              onStart: function(this: any) {
                 // Add temporary glitch effect
-                elements.forEach((el) => {
+                const elements = this.targets();
+                elements.forEach((el: Element) => {
                   let count = 0;
                   const glitchEffect = setInterval(() => {
                     if (count > 5) {
@@ -189,7 +191,7 @@ export function useGSAP(selector: string, options: GSAPOptions = {}) {
           ease: ease,
           stagger: stagger,
           clearProps: "all",
-          onStart: animConfig.to.onStart ? () => animConfig.to.onStart(Array.from(targets)) : undefined
+          onStart: animConfig.to.onStart
         }
       );
     }, element);
@@ -280,22 +282,19 @@ export function useSplitTextAnimation(selector: string, options: GSAPOptions = {
         // Split text into individual characters
         const text = target.textContent || "";
         target.textContent = "";
-        target.style.display = "inline-block";
+        target.setAttribute('style', 'display: inline-block');
         
         // Create wrapper for words
         const words = text.split(" ").map(word => {
           const wordSpan = document.createElement("span");
-          wordSpan.style.display = "inline-block";
-          wordSpan.style.position = "relative";
-          wordSpan.style.whiteSpace = "nowrap";
+          wordSpan.setAttribute('style', 'display: inline-block; position: relative; white-space: nowrap;');
           
           // Create individual character spans
           const chars = word.split("");
           chars.forEach(char => {
             const charSpan = document.createElement("span");
             charSpan.textContent = char;
-            charSpan.style.display = "inline-block";
-            charSpan.style.position = "relative";
+            charSpan.setAttribute('style', 'display: inline-block; position: relative;');
             
             // Apply initial animation state
             gsap.set(charSpan, charAnimation.initial);
@@ -312,7 +311,7 @@ export function useSplitTextAnimation(selector: string, options: GSAPOptions = {
           if (i < words.length - 1) {
             const space = document.createElement("span");
             space.innerHTML = "&nbsp;";
-            space.style.display = "inline-block";
+            space.setAttribute('style', 'display: inline-block;');
             target.appendChild(space);
           }
         });
@@ -422,7 +421,7 @@ export function useCursorFollowAnimation(options = {}) {
 /**
  * Hook for creating magnetic elements that attract to cursor
  */
-export function useMagneticElement(options = { strength: 0.3, ease: 0.2 }) {
+export function useMagneticElement(options: { strength: number; ease?: number } = { strength: 0.3, ease: 0.2 }) {
   const elementRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {

@@ -107,9 +107,9 @@ const Hero = () => {
       gsap.fromTo(
         '.bg-element',
         { 
-          y: index => index % 2 === 0 ? -100 : 100, 
+          y: (index: number) => index % 2 === 0 ? -100 : 100, 
           opacity: 0, 
-          rotation: index => (index % 2 === 0 ? -20 : 20)
+          rotation: (index: number) => (index % 2 === 0 ? -20 : 20)
         },
         { 
           y: 0, 
@@ -133,11 +133,15 @@ const Hero = () => {
         }
       });
       
-      // Animate name letters
-      setLetterClass('text-animate');
+      // Animate name letters once - not on every render or hover
       setTimeout(() => {
-        setLetterClass('text-animate-hover');
-      }, 4000);
+        setLetterClass('text-animate');
+        
+        // Only after initial animation, set to hover state
+        setTimeout(() => {
+          setLetterClass('text-animate-hover');
+        }, 4000);
+      }, 1000);
       
     }, heroRef);
     
@@ -262,8 +266,9 @@ const Hero = () => {
         </a>
       </div>
       
-      {/* CSS for animated text */}
-      <style jsx>{`
+      {/* CSS animations */}
+      <style>
+        {`
         .text-animate {
           display: inline-block;
           opacity: 0;
@@ -322,7 +327,8 @@ const Hero = () => {
             transform: scale3d(1, 1, 1);
           }
         }
-      `}</style>
+        `}
+      </style>
     </section>
   );
 };
