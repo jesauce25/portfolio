@@ -24,10 +24,15 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const isAnimatingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
   
   // Advanced hover effects with GSAP
   useEffect(() => {
     if (!cardRef.current || !imageRef.current || !contentRef.current) return;
+    
+    // Skip setup if already initialized to prevent animation repetition
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
     
     const card = cardRef.current;
     const image = imageRef.current;
@@ -162,8 +167,10 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
   useEffect(() => {
     if (!cardRef.current) return;
     
-    // Create a single animation for entrance
-    gsap.fromTo(
+    // Create a single animation for entrance - using a unique timeline to prevent conflicts
+    const cardEntrance = gsap.timeline({ paused: true });
+    
+    cardEntrance.fromTo(
       cardRef.current,
       { 
         opacity: 0, 
@@ -177,10 +184,22 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
         rotationY: 0,
         scale: 1,
         duration: 0.8,
-        delay: index * 0.1 + 0.2,
-        ease: "power3.out"
+        ease: "power3.out",
+        onComplete: () => {
+          // Clear animation when complete to prevent retriggering
+          cardEntrance.kill();
+        }
       }
     );
+    
+    // Start the entrance animation with a delay based on index
+    setTimeout(() => {
+      cardEntrance.play();
+    }, index * 100 + 200);
+    
+    return () => {
+      cardEntrance.kill();
+    };
   }, [index]);
   
   return (
