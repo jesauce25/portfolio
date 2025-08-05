@@ -46,21 +46,21 @@ const Navbar = () => {
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
-          <a href="#about" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+          <Link to="/about" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
             About
-          </a>
-          <a href="#projects" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+          </Link>
+          <Link to="/projects" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
             Projects
-          </a>
-          <a href="#contact" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+          </Link>
+          <Link to="/contact" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
             Contact
-          </a>
-          <a 
-            href="#contact" 
-            className="nav-item btn-primary py-2 px-5 h-auto"
-          >
-            Hire Me
-          </a>
+          </Link>
+          <Link to="/sideline" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Sideline
+          </Link>
+          <Link to="/admin" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Admin
+          </Link>
         </div>
         
         <button 
@@ -96,34 +96,41 @@ const Navbar = () => {
           </div>
           
           <div className="flex flex-col gap-8 mt-16 items-center">
-            <a 
-              href="#about" 
+            <Link 
+              to="/about" 
               className="text-2xl font-medium"
               onClick={() => setIsOpen(false)}
             >
               About
-            </a>
-            <a 
-              href="#projects" 
+            </Link>
+            <Link 
+              to="/projects" 
               className="text-2xl font-medium"
               onClick={() => setIsOpen(false)}
             >
               Projects
-            </a>
-            <a 
-              href="#contact" 
+            </Link>
+            <Link 
+              to="/contact" 
               className="text-2xl font-medium"
               onClick={() => setIsOpen(false)}
             >
               Contact
-            </a>
-            <a 
-              href="#contact" 
-              className="btn-primary mt-8"
+            </Link>
+            <Link 
+              to="/sideline" 
+              className="text-2xl font-medium"
               onClick={() => setIsOpen(false)}
             >
-              Hire Me
-            </a>
+              Sideline
+            </Link>
+            <Link 
+              to="/admin" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Admin
+            </Link>
           </div>
         </div>
       </div>

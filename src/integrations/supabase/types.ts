@@ -14,7 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      sideline: {
+        Row: {
+          created_at: string | null
+          date_uploaded: string
+          id: string
+          image_urls: Json
+          optimized: boolean | null
+          thumbnail_url: string
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_uploaded: string
+          id?: string
+          image_urls: Json
+          optimized?: boolean | null
+          thumbnail_url: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date_uploaded?: string
+          id?: string
+          image_urls?: Json
+          optimized?: boolean | null
+          thumbnail_url?: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
