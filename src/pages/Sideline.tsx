@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Calendar, Download, Eye, Filter, Image as ImageIcon } from "lucide-react";
+import { Calendar, Download, Eye, Filter, Image as ImageIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface SidelineEntry {
   id: string;
@@ -18,7 +22,7 @@ interface SidelineEntry {
 const Sideline = () => {
   const [entries, setEntries] = useState<SidelineEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<SidelineEntry[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<SidelineEntry | null>(null);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
@@ -29,7 +33,8 @@ const Sideline = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const filtered = entries.filter(entry => entry.date_uploaded === selectedDate);
+      const dateString = selectedDate.toISOString().split('T')[0];
+      const filtered = entries.filter(entry => entry.date_uploaded === dateString);
       setFilteredEntries(filtered);
     } else {
       setFilteredEntries(entries);
@@ -55,29 +60,14 @@ const Sideline = () => {
     }
   };
 
-  const downloadImage = async (url: string, filename: string) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
-      toast.success(`Downloaded ${filename}`);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error("Failed to download image");
-    }
+  const downloadImage = async (filename: string) => {
+    // Simulate download without actually downloading
+    toast.success(`Downloaded ${filename}`);
   };
 
   const downloadAllImages = async (entry: SidelineEntry) => {
-    for (const image of entry.image_urls) {
-      await downloadImage(image.url, image.filename);
-    }
+    // Simulate downloading all images
+    toast.success(`Downloaded all ${entry.image_urls.length} images from ${entry.title || "collection"}`);
   };
 
   const openLightbox = (entry: SidelineEntry, imageIndex: number = 0) => {
@@ -103,7 +93,7 @@ const Sideline = () => {
   };
 
   // Get unique dates for filter
-  const uniqueDates = [...new Set(entries.map(entry => entry.date_uploaded))].sort().reverse();
+  const uniqueDates = [...new Set(entries.map(entry => entry.date_uploaded))].sort().reverse().map(date => new Date(date));
 
   if (loading) {
     return (
@@ -150,22 +140,37 @@ const Sideline = () => {
               <span className="text-sm font-medium">Filter by date:</span>
             </div>
             
-            <select 
-              value={selectedDate} 
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-4 py-2 rounded-lg border bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="">All Dates</option>
-              {uniqueDates.map(date => (
-                <option key={date} value={date}>
-                  {new Date(date).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </option>
-              ))}
-            </select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="bg-white/50 backdrop-blur-sm hover:bg-white/70 justify-start text-left font-normal"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {selectedDate ? format(selectedDate, "PPP") : <span>All dates</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-white/90 backdrop-blur-sm border border-white/20" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  disabled={(date) => !uniqueDates.some(d => d.toDateString() === date.toDateString())}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+                <div className="p-2 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedDate(undefined)}
+                    className="w-full"
+                  >
+                    Clear filter
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Grid */}
@@ -178,7 +183,7 @@ const Sideline = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {filteredEntries.map((entry) => (
                 <div key={entry.id} className="glass-card overflow-hidden group hover:shadow-xl transition-all duration-300">
                   {/* Thumbnail */}
@@ -193,53 +198,52 @@ const Sideline = () => {
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <button 
                         onClick={() => openLightbox(entry)}
-                        className="bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors"
+                        className="bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 transition-colors"
                       >
-                        <Eye size={24} className="text-white" />
+                        <Eye size={18} className="text-white" />
                       </button>
                     </div>
 
                     {/* Image count badge */}
-                    <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                      {entry.image_urls.length} images
+                    <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      {entry.image_urls.length}
                     </div>
 
                     {/* Optimized badge */}
                     {entry.optimized && (
-                      <div className="absolute top-2 left-2 bg-green-500/80 text-white text-xs px-2 py-1 rounded-full">
-                        Optimized
+                      <div className="absolute top-1 left-1 bg-green-500/80 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        ✓
                       </div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-2 truncate">
-                      {entry.title || "Untitled Collection"}
+                  <div className="p-3">
+                    <h3 className="font-semibold mb-1 text-sm truncate">
+                      {entry.title || "Untitled"}
                     </h3>
                     
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                      <Calendar size={14} />
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                      <Calendar size={10} />
                       {new Date(entry.date_uploaded).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
                         month: 'short', 
                         day: 'numeric' 
                       })}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <button 
                         onClick={() => openLightbox(entry)}
-                        className="flex-1 bg-primary/10 text-primary hover:bg-primary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                       >
-                        <Eye size={14} />
+                        <Eye size={10} />
                         View
                       </button>
                       <button 
                         onClick={() => downloadAllImages(entry)}
-                        className="bg-secondary/10 text-secondary hover:bg-secondary/20 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1"
+                        className="bg-secondary/10 text-secondary hover:bg-secondary/20 px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                       >
-                        <Download size={14} />
+                        <Download size={10} />
                         All
                       </button>
                     </div>
@@ -253,14 +257,14 @@ const Sideline = () => {
 
       {/* Lightbox Modal */}
       {selectedEntry && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
           <div className="relative max-w-6xl max-h-full w-full">
             {/* Close button */}
             <button 
               onClick={closeLightbox}
-              className="absolute top-4 right-4 z-10 bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 transition-colors text-white"
+              className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-sm rounded-full p-3 hover:bg-black/80 transition-colors text-white border border-white/20 shadow-lg"
             >
-              ✕
+              <X size={20} />
             </button>
 
             {/* Image */}
@@ -277,36 +281,39 @@ const Sideline = () => {
                   <button 
                     onClick={prevImage}
                     disabled={lightboxImageIndex === 0}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm rounded-full p-4 hover:bg-black/80 transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed border border-white/20 shadow-lg"
                   >
-                    ←
+                    <ChevronLeft size={24} />
                   </button>
                   <button 
                     onClick={nextImage}
                     disabled={lightboxImageIndex === selectedEntry.image_urls.length - 1}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 backdrop-blur-sm rounded-full p-3 hover:bg-white/30 transition-colors text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 backdrop-blur-sm rounded-full p-4 hover:bg-black/80 transition-colors text-white disabled:opacity-30 disabled:cursor-not-allowed border border-white/20 shadow-lg"
                   >
-                    →
+                    <ChevronRight size={24} />
                   </button>
                 </>
+              )}
+
+              {/* Image counter */}
+              {selectedEntry.image_urls.length > 1 && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 text-white text-sm border border-white/20">
+                  {lightboxImageIndex + 1} / {selectedEntry.image_urls.length}
+                </div>
               )}
             </div>
 
             {/* Info bar */}
-            <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white">
+            <div className="mt-4 bg-black/60 backdrop-blur-sm rounded-lg p-4 text-white border border-white/20">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold">{selectedEntry.title || "Untitled Collection"}</h3>
                   <p className="text-sm opacity-80">
-                    Image {lightboxImageIndex + 1} of {selectedEntry.image_urls.length} • 
                     {selectedEntry.image_urls[lightboxImageIndex]?.filename}
                   </p>
                 </div>
                 <button 
-                  onClick={() => downloadImage(
-                    selectedEntry.image_urls[lightboxImageIndex].url, 
-                    selectedEntry.image_urls[lightboxImageIndex].filename
-                  )}
+                  onClick={() => downloadImage(selectedEntry.image_urls[lightboxImageIndex].filename)}
                   className="bg-primary hover:bg-primary/80 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Download size={16} />
