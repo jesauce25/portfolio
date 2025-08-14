@@ -78,12 +78,34 @@ const Admin = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Try to sign in first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
+      if (signInError) {
+        // If user doesn't exist, create the account
+        if (signInError.message.includes('Invalid login credentials')) {
+          toast.info("Creating admin account...");
+          
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/admin`
+            }
+          });
+
+          if (signUpError) {
+            throw signUpError;
+          }
+
+          toast.success("Admin account created! Please check your email to confirm your account, then try logging in again.");
+          return;
+        }
+        throw signInError;
+      }
       
       toast.success("Login successful");
     } catch (error: any) {
