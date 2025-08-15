@@ -108,12 +108,26 @@ const Contact = () => {
     return () => ctx.revert();
   }, []);
   
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Import supabase client
+      const { supabase } = await import("@/integrations/supabase/client");
+      
+      // Call edge function to send email
+      const { error } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name,
+          email,
+          message,
+          to: 'pauloabaquita098956@gmail.com'
+        }
+      });
+
+      if (error) throw error;
+
       toast.success("Your message has been sent successfully!", {
         description: "I'll get back to you as soon as possible.",
         position: "top-center"
@@ -151,7 +165,13 @@ const Contact = () => {
           }
         );
       }
-    }, 1500);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error("Failed to send message. Please try again.", {
+        position: "top-center"
+      });
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -315,11 +335,11 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold mb-1">Email</h4>
-                    <a 
-                      href="mailto:hello@example.com" 
-                      className="text-muted-foreground hover:text-primary transition-colors group flex items-center gap-1"
-                    >
-                      hello@example.com
+                     <a 
+                       href="mailto:pauloabaquita098956@gmail.com" 
+                       className="text-muted-foreground hover:text-primary transition-colors group flex items-center gap-1"
+                     >
+                       pauloabaquita098956@gmail.com
                       <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0" />
                     </a>
                   </div>
@@ -331,11 +351,11 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold mb-1">Phone</h4>
-                    <a 
-                      href="tel:+1234567890" 
-                      className="text-muted-foreground hover:text-secondary transition-colors group flex items-center gap-1"
-                    >
-                      +1 (234) 567-890
+                     <a 
+                       href="tel:+639989565640" 
+                       className="text-muted-foreground hover:text-secondary transition-colors group flex items-center gap-1"
+                     >
+                       +63 998 956 5640
                       <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0" />
                     </a>
                   </div>
@@ -347,9 +367,9 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold mb-1">Location</h4>
-                    <p className="text-muted-foreground">
-                      San Francisco, California
-                    </p>
+                     <p className="text-muted-foreground">
+                       Cebu City, Philippines
+                     </p>
                   </div>
                 </div>
               </div>

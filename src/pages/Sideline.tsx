@@ -33,7 +33,12 @@ const Sideline = () => {
 
   useEffect(() => {
     if (selectedDate) {
-      const dateString = selectedDate.toISOString().split('T')[0];
+      // Format the selected date to match the database format (YYYY-MM-DD)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
       const filtered = entries.filter(entry => entry.date_uploaded === dateString);
       setFilteredEntries(filtered);
     } else {
@@ -63,6 +68,8 @@ const Sideline = () => {
   const downloadImage = async (imageUrl: string, filename: string) => {
     try {
       const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Network response was not ok');
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -75,6 +82,7 @@ const Sideline = () => {
       
       toast.success(`Downloaded ${filename}`);
     } catch (error) {
+      console.error('Download error:', error);
       toast.error("Failed to download image");
     }
   };
@@ -83,6 +91,8 @@ const Sideline = () => {
     try {
       for (const [index, imageData] of entry.image_urls.entries()) {
         const response = await fetch(imageData.url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -101,6 +111,7 @@ const Sideline = () => {
       
       toast.success(`Downloaded all ${entry.image_urls.length} images from ${entry.title || "collection"}`);
     } catch (error) {
+      console.error('Download error:', error);
       toast.error("Failed to download images");
     }
   };
