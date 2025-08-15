@@ -60,14 +60,49 @@ const Sideline = () => {
     }
   };
 
-  const downloadImage = async (filename: string) => {
-    // Simulate download without actually downloading
-    toast.success(`Downloaded ${filename}`);
+  const downloadImage = async (imageUrl: string, filename: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || 'sideline-image.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Downloaded ${filename}`);
+    } catch (error) {
+      toast.error("Failed to download image");
+    }
   };
 
   const downloadAllImages = async (entry: SidelineEntry) => {
-    // Simulate downloading all images
-    toast.success(`Downloaded all ${entry.image_urls.length} images from ${entry.title || "collection"}`);
+    try {
+      for (const [index, imageData] of entry.image_urls.entries()) {
+        const response = await fetch(imageData.url);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = imageData.filename || `${entry.title || 'sideline'}_${index + 1}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        // Small delay between downloads to prevent browser blocking
+        if (index < entry.image_urls.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      toast.success(`Downloaded all ${entry.image_urls.length} images from ${entry.title || "collection"}`);
+    } catch (error) {
+      toast.error("Failed to download images");
+    }
   };
 
   const openLightbox = (entry: SidelineEntry, imageIndex: number = 0) => {
@@ -313,7 +348,7 @@ const Sideline = () => {
                   </p>
                 </div>
                 <button 
-                  onClick={() => downloadImage(selectedEntry.image_urls[lightboxImageIndex].filename)}
+                  onClick={() => downloadImage(selectedEntry.image_urls[lightboxImageIndex].url, selectedEntry.image_urls[lightboxImageIndex].filename)}
                   className="bg-primary hover:bg-primary/80 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Download size={16} />
