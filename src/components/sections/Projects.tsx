@@ -69,11 +69,7 @@ const Projects = () => {
   
   const projectsRef = useRef<HTMLDivElement>(null);
   const filtersRef = useRef<HTMLDivElement>(null);
-  const headingRef = useGSAP('.projects-heading', {
-    scrollTrigger: true,
-    animateFrom: { y: 50, opacity: 0 },
-    animateTo: { y: 0, opacity: 1 },
-  });
+  const headingRef = useRef<HTMLDivElement>(null);
   
   // Filter projects when activeFilter changes
   useEffect(() => {
@@ -86,91 +82,147 @@ const Projects = () => {
       setFilteredProjects(filtered);
     }
     
-    // Animate the filtered results
-    if (projectsRef.current) {
-      const cards = projectsRef.current.querySelectorAll('.project-card');
-      
-      gsap.fromTo(
-        cards,
-        { opacity: 0, y: 20, scale: 0.95 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          scale: 1,
-          duration: 0.6, 
-          stagger: 0.1,
-          ease: "power3.out",
+    // Animate the filtered results with a small delay to ensure DOM is updated
+    const animateCards = () => {
+      if (projectsRef.current) {
+        const cards = projectsRef.current.querySelectorAll('.project-card');
+        if (cards.length > 0) {
+          gsap.fromTo(
+            cards,
+            { opacity: 0, y: 20, scale: 0.95 },
+            { 
+              opacity: 1, 
+              y: 0, 
+              scale: 1,
+              duration: 0.6, 
+              stagger: 0.1,
+              ease: "power3.out",
+            }
+          );
         }
-      );
-    }
+      }
+    };
+
+    // Use requestAnimationFrame to ensure DOM updates are complete
+    requestAnimationFrame(animateCards);
   }, [activeFilter]);
   
-  // Animate filter buttons
+  // Initialize animations after component mounts
   useEffect(() => {
-    if (!filtersRef.current) return;
-    
-    const buttons = filtersRef.current.querySelectorAll('button');
-    
-    gsap.fromTo(
-      buttons,
-      { opacity: 0, y: 20 },
-      { 
-        opacity: 1, 
-        y: 0, 
-        duration: 0.5, 
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: filtersRef.current,
-          start: "top 80%",
-        }
-      }
-    );
-  }, []);
-  
-  // Main animations
-  useEffect(() => {
-    if (!projectsRef.current) return;
-    
-    const ctx = gsap.context(() => {
-      // Background elements animation
-      const bgElements = projectsRef.current?.querySelectorAll('.bg-shape');
+    const initAnimations = () => {
+      if (!projectsRef.current || !filtersRef.current || !headingRef.current) return;
       
-      if (bgElements) {
-        gsap.fromTo(
-          bgElements,
-          { opacity: 0, scale: 0.8, rotation: -10 },
-          { 
-            opacity: 0.8, 
-            scale: 1, 
-            rotation: 0,
-            duration: 1, 
-            stagger: 0.2,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: projectsRef.current,
-              start: "top 80%",
+      const ctx = gsap.context(() => {
+        // Animate heading
+        const heading = headingRef.current?.querySelector('.projects-heading');
+        if (heading) {
+          gsap.fromTo(
+            heading,
+            { y: 50, opacity: 0 },
+            { 
+              y: 0, 
+              opacity: 1, 
+              duration: 0.8,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: heading,
+                start: "top 90%",
+                end: "bottom 60%",
+                toggleActions: "play none none reverse"
+              }
             }
-          }
-        );
-        
-        // Subtle floating animation for background shapes
-        bgElements.forEach((el, i) => {
-          gsap.to(el, {
-            y: i % 2 === 0 ? "20px" : "-20px",
-            rotation: i % 2 === 0 ? 5 : -5,
-            repeat: -1,
-            yoyo: true,
-            duration: 3 + i,
-            ease: "sine.inOut",
-            delay: i * 0.2,
+          );
+        }
+
+        // Animate filter buttons
+        const buttons = filtersRef.current?.querySelectorAll('button');
+        if (buttons && buttons.length > 0) {
+          gsap.fromTo(
+            buttons,
+            { opacity: 0, y: 20 },
+            { 
+              opacity: 1, 
+              y: 0, 
+              duration: 0.5, 
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: filtersRef.current,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        }
+
+        // Background elements animation
+        const bgElements = projectsRef.current?.querySelectorAll('.bg-shape');
+        if (bgElements && bgElements.length > 0) {
+          gsap.fromTo(
+            bgElements,
+            { opacity: 0, scale: 0.8, rotation: -10 },
+            { 
+              opacity: 0.8, 
+              scale: 1, 
+              rotation: 0,
+              duration: 1, 
+              stagger: 0.2,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: projectsRef.current,
+                start: "top 80%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+          
+          // Subtle floating animation for background shapes
+          bgElements.forEach((el, i) => {
+            gsap.to(el, {
+              y: i % 2 === 0 ? "20px" : "-20px",
+              rotation: i % 2 === 0 ? 5 : -5,
+              repeat: -1,
+              yoyo: true,
+              duration: 3 + i,
+              ease: "sine.inOut",
+              delay: i * 0.2,
+            });
           });
-        });
-      }
-    }, projectsRef);
+        }
+
+        // Initial project cards animation
+        const initialCards = projectsRef.current?.querySelectorAll('.project-card');
+        if (initialCards && initialCards.length > 0) {
+          gsap.fromTo(
+            initialCards,
+            { opacity: 0, y: 30, scale: 0.95 },
+            { 
+              opacity: 1, 
+              y: 0, 
+              scale: 1,
+              duration: 0.6, 
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: ".projects-grid",
+                start: "top 85%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
+        }
+      }, projectsRef);
+      
+      return () => ctx.revert();
+    };
+
+    // Use a timeout to ensure all refs are properly set
+    const timeoutId = setTimeout(initAnimations, 100);
     
-    return () => ctx.revert();
-  }, []);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, []); // Only run once on mount
   
   return (
     <section 
