@@ -3,7 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Upload, Image as ImageIcon, LogOut, Lock, Calendar, Trash2 } from "lucide-react";
+import { Upload, Image as ImageIcon, LogOut, Lock, Calendar, Trash2, Filter, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import type { User } from "@supabase/supabase-js";
 
 const ADMIN_EMAIL = "pauloabaquita098956@gmail.com";
@@ -28,6 +32,13 @@ const Admin = () => {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [batchTitle, setBatchTitle] = useState("");
   const [entries, setEntries] = useState<SidelineEntry[]>([]);
+  
+  // New state for table functionality
+  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
+  const [filteredEntries, setFilteredEntries] = useState<SidelineEntry[]>([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -95,6 +106,93 @@ const Admin = () => {
       setEntries(data || []);
     } catch (error) {
       console.error('Error fetching entries:', error);
+    }
+  };
+
+  // Filter entries by date
+  useEffect(() => {
+    let filtered = entries;
+    
+    if (dateFilter) {
+      const filterDate = format(dateFilter, 'yyyy-MM-dd');
+      filtered = entries.filter(entry => entry.date_uploaded === filterDate);
+    }
+    
+    setFilteredEntries(filtered);
+    
+    // Reset selection when filter changes
+    setSelectedEntries(new Set());
+    setSelectAll(false);
+  }, [entries, dateFilter]);
+
+  // Handle individual checkbox selection
+  const handleSelectEntry = (entryId: string) => {
+    const newSelected = new Set(selectedEntries);
+    if (newSelected.has(entryId)) {
+      newSelected.delete(entryId);
+    } else {
+      newSelected.add(entryId);
+    }
+    setSelectedEntries(newSelected);
+    
+    // Update select all checkbox
+    setSelectAll(newSelected.size === filteredEntries.length && filteredEntries.length > 0);
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedEntries(new Set());
+      setSelectAll(false);
+    } else {
+      const allIds = new Set(filteredEntries.map(entry => entry.id));
+      setSelectedEntries(allIds);
+      setSelectAll(true);
+    }
+  };
+
+  // Bulk delete function
+  const handleBulkDelete = async () => {
+    if (selectedEntries.size === 0) {
+      toast.error("Please select batches to delete");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedEntries.size} selected batch(es)?`)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    try {
+      const entriesToDelete = filteredEntries.filter(entry => selectedEntries.has(entry.id));
+      
+      for (const entry of entriesToDelete) {
+        // Delete files from storage
+        for (const image of entry.image_urls) {
+          const fileName = image.url.split('/').pop();
+          if (fileName) {
+            await supabase.storage.from('sideline').remove([fileName]);
+          }
+        }
+        
+        // Delete from database
+        const { error } = await supabase
+          .from('sideline')
+          .delete()
+          .eq('id', entry.id);
+          
+        if (error) throw error;
+      }
+
+      toast.success(`Successfully deleted ${selectedEntries.size} batch(es)`);
+      setSelectedEntries(new Set());
+      setSelectAll(false);
+      fetchEntries();
+    } catch (error: any) {
+      console.error('Bulk delete error:', error);
+      toast.error("Failed to delete some batches");
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -436,56 +534,169 @@ const Admin = () => {
             </div>
           </div>
 
-          {/* Entries List */}
+          {/* Entries Table */}
           <div>
-            <h2 className="text-xl font-semibold mb-6">Uploaded Batches ({entries.length})</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold">Uploaded Batches ({filteredEntries.length})</h2>
+              
+              {/* Controls */}
+              <div className="flex items-center gap-4">
+                {/* Date Filter */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-10 justify-start text-left font-normal"
+                    >
+                      <Filter className="mr-2 h-4 w-4" />
+                      {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFilter}
+                      onSelect={setDateFilter}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                    {dateFilter && (
+                      <div className="p-3 border-t">
+                        <Button 
+                          onClick={() => setDateFilter(undefined)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <X size={14} className="mr-1" />
+                          Clear Filter
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+
+                {/* Bulk Delete Button */}
+                {selectedEntries.size > 0 && (
+                  <Button
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    variant="destructive"
+                    className="h-10"
+                  >
+                    {bulkDeleting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={16} className="mr-2" />
+                        Delete Selected ({selectedEntries.size})
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
             
-            {entries.length === 0 ? (
+            {filteredEntries.length === 0 ? (
               <div className="text-center py-16 glass-card">
                 <ImageIcon size={64} className="mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No batches uploaded</h3>
-                <p className="text-muted-foreground">Upload your first batch of images to get started.</p>
+                <h3 className="text-lg font-semibold mb-2">
+                  {dateFilter ? "No batches found for selected date" : "No batches uploaded"}
+                </h3>
+                <p className="text-muted-foreground">
+                  {dateFilter 
+                    ? "Try selecting a different date or clear the filter."
+                    : "Upload your first batch of images to get started."
+                  }
+                </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {entries.map((entry) => (
-                  <div key={entry.id} className="glass-card p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <img 
-                          src={entry.thumbnail_url} 
-                          alt={entry.title || "Untitled"}
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
-                        <div>
-                          <h3 className="font-semibold">
-                            {entry.title || "Untitled Collection"}
-                          </h3>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
+              <div className="glass-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50 border-b">
+                      <tr>
+                        <th className="p-4 text-left">
+                          <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                        </th>
+                        <th className="p-4 text-left font-medium">Thumbnail</th>
+                        <th className="p-4 text-left font-medium">Title</th>
+                        <th className="p-4 text-left font-medium">Date</th>
+                        <th className="p-4 text-left font-medium">Images</th>
+                        <th className="p-4 text-left font-medium">Status</th>
+                        <th className="p-4 text-left font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEntries.map((entry, index) => (
+                        <tr key={entry.id} className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                          <td className="p-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedEntries.has(entry.id)}
+                              onChange={() => handleSelectEntry(entry.id)}
+                              className="rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                          </td>
+                          <td className="p-4">
+                            <img 
+                              src={entry.thumbnail_url} 
+                              alt={entry.title || "Untitled"}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                          </td>
+                          <td className="p-4">
+                            <div className="font-medium">
+                              {entry.title || "Untitled Collection"}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <Calendar size={14} />
                               {new Date(entry.date_uploaded).toLocaleDateString()}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-sm font-medium">
+                              {entry.image_urls.length} images
                             </span>
-                            <span>{entry.image_urls.length} images</span>
-                            {entry.optimized && (
-                              <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs">
+                          </td>
+                          <td className="p-4">
+                            {entry.optimized ? (
+                              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                                <Check size={12} />
                                 Optimized
                               </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                                <X size={12} />
+                                Not Optimized
+                              </span>
                             )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        onClick={() => deleteEntry(entry)}
-                        className="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                        title="Delete batch"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                          </td>
+                          <td className="p-4">
+                            <Button
+                              onClick={() => deleteEntry(entry)}
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
