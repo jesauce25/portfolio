@@ -35,15 +35,17 @@ const Admin = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user && user.email === ADMIN_EMAIL) {
         setUser(user);
+        await ensureAdminRole(user.id);
         fetchEntries();
       }
     };
     checkUser();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user && session.user.email === ADMIN_EMAIL) {
         setUser(session.user);
+        await ensureAdminRole(session.user.id);
         fetchEntries();
       } else {
         setUser(null);
@@ -53,6 +55,34 @@ const Admin = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const ensureAdminRole = async (userId: string) => {
+    try {
+      // Check if admin role already exists
+      const { data: existingRole } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      // If no admin role exists, create one
+      if (!existingRole) {
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: 'admin'
+          });
+
+        if (error && !error.message.includes('duplicate key value violates unique constraint')) {
+          console.error('Error assigning admin role:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking/assigning admin role:', error);
+    }
+  };
 
   const fetchEntries = async () => {
     try {
@@ -125,33 +155,6 @@ const Admin = () => {
     }
   };
 
-  const ensureAdminRole = async (userId: string) => {
-    try {
-      // Check if admin role already exists
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .single();
-
-      // If no admin role exists, create one
-      if (!existingRole) {
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: userId,
-            role: 'admin'
-          });
-
-        if (error && !error.message.includes('duplicate key value violates unique constraint')) {
-          console.error('Error assigning admin role:', error);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking/assigning admin role:', error);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
