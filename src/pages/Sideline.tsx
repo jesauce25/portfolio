@@ -22,7 +22,7 @@ interface SidelineEntry {
 const Sideline = () => {
   const [entries, setEntries] = useState<SidelineEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<SidelineEntry[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date()); // Default to today
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState<SidelineEntry | null>(null);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
@@ -65,54 +65,51 @@ const Sideline = () => {
     }
   };
 
-  const downloadImage = async (imageUrl: string, filename: string) => {
+  const downloadFile = async (fileUrl: string, filename: string) => {
     try {
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error('Network response was not ok');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Create a temporary link that opens the file in a new tab to preserve quality
       const link = document.createElement('a');
-      link.href = url;
-      link.download = filename || 'sideline-image.jpg';
+      link.href = fileUrl;
+      link.download = filename || 'sideline-file';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
       
       toast.success(`Downloaded ${filename}`);
     } catch (error) {
       console.error('Download error:', error);
-      toast.error("Failed to download image");
+      toast.error("Failed to download file");
     }
   };
 
-  const downloadAllImages = async (entry: SidelineEntry) => {
+  const downloadAllFiles = async (entry: SidelineEntry) => {
     try {
-      for (const [index, imageData] of entry.image_urls.entries()) {
-        const response = await fetch(imageData.url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+      for (const [index, fileData] of entry.image_urls.entries()) {
+        // Direct download to preserve quality
         const link = document.createElement('a');
-        link.href = url;
-        link.download = imageData.filename || `${entry.title || 'sideline'}_${index + 1}.jpg`;
+        link.href = fileData.url;
+        link.download = fileData.filename || `${entry.title || 'sideline'}_${index + 1}`;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
         
         // Small delay between downloads to prevent browser blocking
         if (index < entry.image_urls.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
       
-      toast.success(`Downloaded all ${entry.image_urls.length} images from ${entry.title || "collection"}`);
+      const fileCount = entry.image_urls.length;
+      const imageCount = entry.image_urls.filter(f => f.type === 'image').length;
+      const videoCount = entry.image_urls.filter(f => f.type === 'video').length;
+      toast.success(`Downloaded ${fileCount} files${imageCount > 0 ? ` (${imageCount} images` : ''}${videoCount > 0 ? `${imageCount > 0 ? ', ' : ' ('}${videoCount} videos` : ''}${imageCount > 0 || videoCount > 0 ? ')' : ''} from ${entry.title || "collection"}`);
     } catch (error) {
       console.error('Download error:', error);
-      toast.error("Failed to download images");
+      toast.error("Failed to download files");
     }
   };
 
@@ -167,7 +164,7 @@ const Sideline = () => {
           <div className="text-center mb-16">
             <div className="inline-flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10">
               <ImageIcon size={16} className="text-primary" />
-              <span className="text-sm font-medium">Image Gallery</span>
+              <span className="text-sm font-medium">Media Gallery</span>
             </div>
             
             <h1 className="heading-xl mb-6 gradient-text">
@@ -175,7 +172,7 @@ const Sideline = () => {
             </h1>
             
             <p className="subheading max-w-2xl mx-auto">
-              Explore curated image collections organized by upload date. Click on any batch to view the full gallery.
+              Explore curated image and video collections organized by upload date. Click on any batch to view the full gallery.
             </p>
           </div>
 
@@ -223,22 +220,31 @@ const Sideline = () => {
           {filteredEntries.length === 0 ? (
             <div className="text-center py-16">
               <ImageIcon size={64} className="mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No images found</h3>
+              <h3 className="text-xl font-semibold mb-2">No files found</h3>
               <p className="text-muted-foreground">
-                {selectedDate ? "No images uploaded on the selected date." : "No images have been uploaded yet."}
+                {selectedDate ? "No files uploaded on the selected date." : "No files have been uploaded yet."}
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
               {filteredEntries.map((entry) => (
                 <div key={entry.id} className="glass-card overflow-hidden group hover:shadow-xl transition-all duration-300">
-                  {/* Thumbnail */}
+                   {/* Thumbnail */}
                   <div className="relative aspect-square overflow-hidden">
-                    <img 
-                      src={entry.thumbnail_url} 
-                      alt={entry.title || "Untitled"}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
+                    {entry.image_urls[0]?.type === 'video' ? (
+                      <video 
+                        src={entry.thumbnail_url} 
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        muted
+                        playsInline
+                      />
+                    ) : (
+                      <img 
+                        src={entry.thumbnail_url} 
+                        alt={entry.title || "Untitled"}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    )}
                     
                     {/* Overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -250,9 +256,9 @@ const Sideline = () => {
                       </button>
                     </div>
 
-                    {/* Image count badge */}
+                    {/* File count badge */}
                     <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {entry.image_urls.length}
+                      {entry.image_urls.length} {entry.image_urls.some(f => f.type === 'video') ? '📹' : '📷'}
                     </div>
 
                     {/* Optimized badge */}
@@ -286,7 +292,7 @@ const Sideline = () => {
                         View
                       </button>
                       <button 
-                        onClick={() => downloadAllImages(entry)}
+                        onClick={() => downloadAllFiles(entry)}
                         className="bg-secondary/10 text-secondary hover:bg-secondary/20 px-2 py-1.5 rounded text-xs font-medium transition-colors flex items-center justify-center gap-1"
                       >
                         <Download size={10} />
@@ -313,13 +319,22 @@ const Sideline = () => {
               <X size={20} />
             </button>
 
-            {/* Image */}
+            {/* Image/Video */}
             <div className="relative">
-              <img 
-                src={selectedEntry.image_urls[lightboxImageIndex]?.url} 
-                alt={selectedEntry.image_urls[lightboxImageIndex]?.filename}
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-              />
+              {selectedEntry.image_urls[lightboxImageIndex]?.type === 'video' ? (
+                <video 
+                  src={selectedEntry.image_urls[lightboxImageIndex]?.url} 
+                  controls
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                  playsInline
+                />
+              ) : (
+                <img 
+                  src={selectedEntry.image_urls[lightboxImageIndex]?.url} 
+                  alt={selectedEntry.image_urls[lightboxImageIndex]?.filename}
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                />
+              )}
 
               {/* Navigation */}
               {selectedEntry.image_urls.length > 1 && (
@@ -359,7 +374,7 @@ const Sideline = () => {
                   </p>
                 </div>
                 <button 
-                  onClick={() => downloadImage(selectedEntry.image_urls[lightboxImageIndex].url, selectedEntry.image_urls[lightboxImageIndex].filename)}
+                  onClick={() => downloadFile(selectedEntry.image_urls[lightboxImageIndex].url, selectedEntry.image_urls[lightboxImageIndex].filename)}
                   className="bg-primary hover:bg-primary/80 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                 >
                   <Download size={16} />

@@ -167,13 +167,13 @@ const Admin = () => {
       const entriesToDelete = filteredEntries.filter(entry => selectedEntries.has(entry.id));
       
       for (const entry of entriesToDelete) {
-        // Delete files from storage
-        for (const image of entry.image_urls) {
-          const fileName = image.url.split('/').pop();
-          if (fileName) {
-            await supabase.storage.from('sideline').remove([fileName]);
-          }
+      // Delete files from storage
+      for (const file of entry.image_urls) {
+        const fileName = file.url.split('/').pop();
+        if (fileName) {
+          await supabase.storage.from('sideline').remove([fileName]);
         }
+      }
         
         // Delete from database
         const { error } = await supabase
@@ -274,7 +274,7 @@ const Admin = () => {
 
     setUploading(true);
     try {
-      const imageUrls: Array<{ url: string; filename: string }> = [];
+      const imageUrls: Array<{ url: string; filename: string; type: string }> = [];
       let thumbnailUrl = "";
 
       // Upload each file
@@ -286,7 +286,10 @@ const Admin = () => {
 
         const { error: uploadError } = await supabase.storage
           .from('sideline')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) throw uploadError;
 
@@ -297,10 +300,11 @@ const Admin = () => {
 
         imageUrls.push({
           url: publicUrl,
-          filename: file.name
+          filename: file.name,
+          type: file.type.startsWith('image/') ? 'image' : 'video'
         });
 
-        // Use first image as thumbnail
+        // Use first file as thumbnail (for videos, this will be the video URL itself)
         if (i === 0) {
           thumbnailUrl = publicUrl;
         }
@@ -319,7 +323,9 @@ const Admin = () => {
 
       if (dbError) throw dbError;
 
-      toast.success(`Successfully uploaded ${selectedFiles.length} images`);
+      const imageCount = Array.from(selectedFiles).filter(f => f.type.startsWith('image/')).length;
+      const videoCount = Array.from(selectedFiles).filter(f => f.type.startsWith('video/')).length;
+      toast.success(`Successfully uploaded ${imageCount} images${videoCount > 0 ? ` and ${videoCount} videos` : ''}`);
       setSelectedFiles(null);
       setBatchTitle("");
       
@@ -341,13 +347,13 @@ const Admin = () => {
     if (!confirm("Are you sure you want to delete this batch?")) return;
 
     try {
-      // Delete files from storage
-      for (const image of entry.image_urls) {
-        const fileName = image.url.split('/').pop();
-        if (fileName) {
-          await supabase.storage.from('sideline').remove([fileName]);
-        }
+    // Delete files from storage
+    for (const file of entry.image_urls) {
+      const fileName = file.url.split('/').pop();
+      if (fileName) {
+        await supabase.storage.from('sideline').remove([fileName]);
       }
+    }
 
       // Delete from database
       const { error } = await supabase
@@ -458,7 +464,7 @@ const Admin = () => {
               
               <h1 className="heading-lg mb-2">Sideline Management</h1>
               <p className="text-muted-foreground">
-                Upload and manage image batches for the sideline gallery
+                Upload and manage image/video batches for the sideline gallery
               </p>
             </div>
 
@@ -496,19 +502,19 @@ const Admin = () => {
 
                 <div>
                   <label htmlFor="file-input" className="block text-sm font-medium mb-2">
-                    Select Images
+                    Select Images & Videos
                   </label>
                   <input 
                     type="file" 
                     id="file-input"
-                    accept="image/*"
+                    accept="image/*,video/*"
                     multiple
                     onChange={(e) => setSelectedFiles(e.target.files)}
                     className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-white/50 backdrop-blur-sm"
                   />
                   {selectedFiles && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      {selectedFiles.length} file(s) selected
+                      {selectedFiles.length} file(s) selected ({Array.from(selectedFiles).filter(f => f.type.startsWith('image/')).length} images, {Array.from(selectedFiles).filter(f => f.type.startsWith('video/')).length} videos)
                     </p>
                   )}
                 </div>
@@ -630,7 +636,7 @@ const Admin = () => {
                         <th className="p-4 text-left font-medium">Thumbnail</th>
                         <th className="p-4 text-left font-medium">Title</th>
                         <th className="p-4 text-left font-medium">Date</th>
-                        <th className="p-4 text-left font-medium">Images</th>
+                        <th className="p-4 text-left font-medium">Files</th>
                         <th className="p-4 text-left font-medium">Status</th>
                         <th className="p-4 text-left font-medium">Actions</th>
                       </tr>
@@ -666,7 +672,7 @@ const Admin = () => {
                           </td>
                           <td className="p-4">
                             <span className="text-sm font-medium">
-                              {entry.image_urls.length} images
+                              {entry.image_urls.length} files
                             </span>
                           </td>
                           <td className="p-4">
