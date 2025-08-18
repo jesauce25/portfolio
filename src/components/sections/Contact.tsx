@@ -130,7 +130,11 @@ const Contact = () => {
 
       toast.success("Your message has been sent successfully!", {
         description: "I'll get back to you as soon as possible.",
-        position: "top-center"
+        position: "top-center",
+        action: {
+          label: "×",
+          onClick: () => toast.dismiss(),
+        },
       });
       
       // Animate form submission success
@@ -168,7 +172,11 @@ const Contact = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error("Failed to send message. Please try again.", {
-        position: "top-center"
+        position: "top-center",
+        action: {
+          label: "×",
+          onClick: () => toast.dismiss(),
+        },
       });
       setIsSubmitting(false);
     }

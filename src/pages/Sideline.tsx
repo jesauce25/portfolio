@@ -67,35 +67,51 @@ const Sideline = () => {
 
   const downloadFile = async (fileUrl: string, filename: string) => {
     try {
-      // Create a temporary link that opens the file in a new tab to preserve quality
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
-      link.href = fileUrl;
+      link.href = url;
       link.download = filename || 'sideline-file';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      toast.success(`Downloaded ${filename}`);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Downloaded ${filename}`, {
+        action: {
+          label: "×",
+          onClick: () => toast.dismiss(),
+        },
+      });
     } catch (error) {
       console.error('Download error:', error);
-      toast.error("Failed to download file");
+      toast.error("Failed to download file", {
+        action: {
+          label: "×", 
+          onClick: () => toast.dismiss(),
+        },
+      });
     }
   };
 
   const downloadAllFiles = async (entry: SidelineEntry) => {
     try {
       for (const [index, fileData] of entry.image_urls.entries()) {
-        // Direct download to preserve quality
+        const response = await fetch(fileData.url);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
         const link = document.createElement('a');
-        link.href = fileData.url;
+        link.href = url;
         link.download = fileData.filename || `${entry.title || 'sideline'}_${index + 1}`;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        window.URL.revokeObjectURL(url);
         
         // Small delay between downloads to prevent browser blocking
         if (index < entry.image_urls.length - 1) {
@@ -106,10 +122,20 @@ const Sideline = () => {
       const fileCount = entry.image_urls.length;
       const imageCount = entry.image_urls.filter(f => f.type === 'image').length;
       const videoCount = entry.image_urls.filter(f => f.type === 'video').length;
-      toast.success(`Downloaded ${fileCount} files${imageCount > 0 ? ` (${imageCount} images` : ''}${videoCount > 0 ? `${imageCount > 0 ? ', ' : ' ('}${videoCount} videos` : ''}${imageCount > 0 || videoCount > 0 ? ')' : ''} from ${entry.title || "collection"}`);
+      toast.success(`Downloaded ${fileCount} files${imageCount > 0 ? ` (${imageCount} images` : ''}${videoCount > 0 ? `${imageCount > 0 ? ', ' : ' ('}${videoCount} videos` : ''}${imageCount > 0 || videoCount > 0 ? ')' : ''} from ${entry.title || "collection"}`, {
+        action: {
+          label: "×",
+          onClick: () => toast.dismiss(),
+        },
+      });
     } catch (error) {
       console.error('Download error:', error);
-      toast.error("Failed to download files");
+      toast.error("Failed to download files", {
+        action: {
+          label: "×",
+          onClick: () => toast.dismiss(), 
+        },
+      });
     }
   };
 
@@ -214,6 +240,14 @@ const Sideline = () => {
                 </div>
               </PopoverContent>
             </Popover>
+
+            <Button
+              variant="secondary"
+              onClick={() => setSelectedDate(undefined)}
+              className="bg-secondary/10 text-secondary hover:bg-secondary/20"
+            >
+              View All Images
+            </Button>
           </div>
 
           {/* Grid */}
