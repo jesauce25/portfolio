@@ -1,409 +1,353 @@
-import { useRef, useEffect, useState } from "react";
+"use client";
+
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP, useMagneticElement } from "@/hooks/useGSAP";
-import { Code, Layout, Sparkles, Terminal, Zap, Monitor, Smile } from "lucide-react";
+import { motion, useAnimation, Variants } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Handshake,
+  Globe,
+  Target,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
+import { useMagneticElement } from "@/hooks/useGSAP"; // custom hook for magnet effect
 
+gsap.registerPlugin(ScrollTrigger);
+
+/** -----------------------------------------------
+ * Traits Config (now with emojis + pastel bg colors)
+ * ----------------------------------------------- */
+type Trait = {
+  label: string;
+  emoji: string;
+  bg: string;
+};
+
+const TRAITS: Trait[] = [
+  {
+    label: "Websites that bring in more sales and inquiries — not just clicks",
+    emoji: "💰",
+    bg: "bg-green-100 text-green-800",
+  },
+  {
+    label: "Designs that instantly build trust so customers choose you over competitors",
+    emoji: "🤝",
+    bg: "bg-blue-100 text-blue-800",
+  },
+  {
+    label: "Lightning-fast load speed — because every second lost costs customers",
+    emoji: "⚡",
+    bg: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    label: "Mobile-first experience that captures buyers wherever they are",
+    emoji: "📱",
+    bg: "bg-purple-100 text-purple-800",
+  },
+  {
+    label: "Optimized to appear on Google — so customers find your business first",
+    emoji: "🔍",
+    bg: "bg-pink-100 text-pink-800",
+  },
+  {
+    label: "Tailored solutions focused on growth, not cookie-cutter templates",
+    emoji: "📈",
+    bg: "bg-indigo-100 text-indigo-800",
+  },
+];
+
+
+/** -----------------------------------------------
+ * Framer Motion Variants
+ * ----------------------------------------------- */
+const sectionVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { when: "beforeChildren", staggerChildren: 0.15 },
+  },
+};
+
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80 } },
+};
+
+const popIn: Variants = {
+  hidden: { opacity: 0, scale: 0.96 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
+};
+
+/** -----------------------------------------------
+ * About Section
+ * ----------------------------------------------- */
 const About = () => {
   const aboutRef = useRef<HTMLDivElement>(null);
-  const imageBoxRef = useMagneticElement({ strength: 0.15 });
-  const hasAnimatedRef = useRef(false);
-  
-  const headingRef = useGSAP('.about-heading', {
-    scrollTrigger: {
-      trigger: '.about-heading',
-      start: "top 80%",
-      once: true
-    },
-    animation: "creative"
-  });
-  
-  const [activeTab, setActiveTab] = useState(0);
-  const tabContentRef = useRef<HTMLDivElement>(null);
-  
-  const skills = [
-    {
-      category: "Frontend",
-      items: ["React", "Vue", "Next.js", "JavaScript", "TypeScript", "CSS/SCSS", "Tailwind CSS"]
-    },
-    {
-      category: "Design & Animation",
-      items: ["GSAP", "Framer Motion", "Three.js", "Figma", "CSS Animations", "SVG Animation"]
-    },
-    {
-      category: "Backend & Tools",
-      items: ["Node.js", "Express", "Firebase", "Git", "Jest", "Webpack/Vite", "CI/CD"]
-    }
-  ];
-  
+  const controls = useAnimation();
+
   useEffect(() => {
-    if (!aboutRef.current || hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
-    
+    if (!aboutRef.current) return;
+
     const ctx = gsap.context(() => {
-      // Register ScrollTrigger
       ScrollTrigger.refresh();
-      
-      // Animate the image reveal with mask effect - using once flag
-      const imageReveal = aboutRef.current.querySelector('.image-reveal');
-      const image = aboutRef.current.querySelector('.about-image');
-      
-      if (imageReveal && image) {
-        gsap.fromTo(
-          imageReveal,
-          { clipPath: 'polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)' },
-          { 
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)', 
-            duration: 1.2, 
-            ease: "power3.inOut",
-            scrollTrigger: {
-              trigger: imageReveal,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none none",
-              once: true // Only play once
-            }
-          }
-        );
-        
-        // Parallax effect on image - only once
-        gsap.fromTo(
-          image,
-          { scale: 1.2, rotation: -5 },
-          { 
-            scale: 1, 
-            rotation: 0,
-            ease: "power2.out",
-            duration: 1.4,
-            scrollTrigger: {
-              trigger: imageReveal,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none none",
-              once: true // Only play once
-            }
-          }
-        );
-      }
-      
-      // Animate skill cards - only once
-      const skillCards = aboutRef.current.querySelectorAll('.skill-card');
-      
+
       gsap.fromTo(
-        skillCards,
-        { y: 60, opacity: 0, rotationY: 15, transformPerspective: 600 },
-        { 
-          y: 0, 
-          opacity: 1, 
-          rotationY: 0,
-          stagger: 0.15,
-          duration: 0.8, 
-          ease: "back.out(1.5)",
+        ".about-eyebrow",
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power3.out",
           scrollTrigger: {
-            trigger: '.skills-container',
+            trigger: aboutRef.current,
             start: "top 80%",
-            toggleActions: "play none none none",
-            once: true // Only play once
-          }
+            once: true,
+          },
         }
       );
-      
-      // Code snippets typing effect - only once
-      const codeLines = aboutRef.current.querySelectorAll('.code-line');
-      
-      codeLines.forEach((line, index) => {
-        gsap.fromTo(
-          line,
-          { width: 0, opacity: 0 },
-          {
-            width: "100%",
-            opacity: 1,
-            duration: 0.6,
-            delay: 0.5 + index * 0.2,
-            ease: "steps(30)",
-            scrollTrigger: {
-              trigger: '.about-code',
-              start: "top 80%",
-              toggleActions: "play none none none",
-              once: true // Only play once
-            }
-          }
-        );
-      });
-      
-      // Floating particles effect - continuous animation, this is fine
-      const particles = aboutRef.current.querySelectorAll('.particle');
-      
-      particles.forEach((particle, index) => {
-        const randomX = (Math.random() - 0.5) * 40;
-        const randomY = (Math.random() - 0.5) * 40;
-        const randomDuration = 10 + Math.random() * 20;
-        const randomDelay = Math.random() * 2;
-        
-        gsap.set(particle, {
-          x: randomX,
-          y: randomY,
-          opacity: 0.2 + Math.random() * 0.5,
-          scale: 0.5 + Math.random() * 0.5
-        });
-        
-        gsap.to(particle, {
-          x: randomX * -1,
-          y: randomY * -1,
-          repeat: -1,
-          yoyo: true,
-          duration: randomDuration,
-          delay: randomDelay,
-          ease: "sine.inOut"
-        });
-      });
+
+      gsap.fromTo(
+        ".about-heading",
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          ease: "power3.out",
+          delay: 0.1,
+          scrollTrigger: {
+            trigger: aboutRef.current,
+            start: "top 78%",
+            once: true,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        ".about-sub",
+        { y: 24, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.9,
+          ease: "power3.out",
+          delay: 0.2,
+          scrollTrigger: {
+            trigger: aboutRef.current,
+            start: "top 75%",
+            once: true,
+          },
+        }
+      );
     }, aboutRef);
-    
+
+    controls.start("show");
+
     return () => ctx.revert();
-  }, []);
-  
-  // Handle tab switching animation - single animation per tab change, not mouse movement related
-  useEffect(() => {
-    if (!tabContentRef.current) return;
-    
-    const tabPanels = tabContentRef.current.querySelectorAll('.tab-panel');
-    
-    gsap.fromTo(
-      tabPanels[activeTab],
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }
-    );
-  }, [activeTab]);
-  
+  }, [controls]);
+
   return (
-    <section 
-      id="about" 
+    <section
+      id="about"
       ref={aboutRef}
-      className="py-32 relative overflow-hidden"
+      className="relative py-28 overflow-hidden"
     >
-      {/* Background decoration */}
-      <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 z-0">
-        <div className="col-span-2 row-span-1 bg-primary/[0.02] backdrop-blur-3xl"></div>
-        <div className="col-span-3 row-span-2 col-start-10 row-start-2 bg-secondary/[0.02] backdrop-blur-3xl"></div>
-        <div className="col-span-2 row-span-1 col-start-2 row-start-5 bg-accent/[0.02] backdrop-blur-3xl"></div>
+      {/* Background Blobs */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 -left-16 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="absolute top-1/3 -right-20 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="absolute bottom-10 left-1/4 h-60 w-60 rounded-full bg-pink-500/10 blur-2xl" />
       </div>
-      
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(15)].map((_, index) => (
-          <div 
-            key={index}
-            className="particle absolute w-2 h-2 rounded-full bg-primary/20"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          ></div>
-        ))}
-      </div>
-      
-      <div className="container-section relative z-10">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
-          <div className="flex-1 order-2 lg:order-1" ref={headingRef}>
-            <div className="inline-flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10">
-              <Terminal size={16} className="text-primary" />
-              <span className="text-sm font-medium">About Me</span>
-            </div>
-            
-            <h2 className="about-heading heading-lg mb-6">
-              Crafting <span className="text-gradient">digital experiences</span> with code & creativity
-            </h2>
-            
-            <p className="text-muted-foreground mb-6 text-lg">
-              I'm a creative frontend developer with a passion for building immersive digital experiences. Combining technical expertise with an eye for design, I transform ideas into interactive realities.
-            </p>
-            
-            <div className="mb-10 space-y-6">
-              {/* Tabs navigation */}
-              <div className="flex flex-wrap gap-4 mb-6">
-                {["My Journey", "My Approach", "My Toolkit"].map((tab, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveTab(index)}
-                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-                      activeTab === index 
-                        ? 'bg-primary text-white' 
-                        : 'bg-primary/10 hover:bg-primary/20'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-              
-              {/* Tab content */}
-              <div ref={tabContentRef} className="relative min-h-[120px]">
-                <div className={`tab-panel absolute inset-0 ${activeTab === 0 ? 'block' : 'hidden'}`}>
-                  <p className="text-muted-foreground">
-                    My journey began with curiosity about how websites work. After studying web development, I've worked on numerous projects across various industries, continuously refining my craft and exploring new technologies to create better user experiences.
-                  </p>
-                </div>
-                
-                <div className={`tab-panel absolute inset-0 ${activeTab === 1 ? 'block' : 'hidden'}`}>
-                  <p className="text-muted-foreground">
-                    I believe in a holistic approach to frontend development - one that balances aesthetics, performance, and accessibility. My process involves deep collaboration, iterative refinement, and attention to the smallest details that make experiences feel magical.
-                  </p>
-                </div>
-                
-                <div className={`tab-panel absolute inset-0 ${activeTab === 2 ? 'block' : 'hidden'}`}>
-                  <p className="text-muted-foreground">
-                    My toolkit constantly evolves, but currently includes React, TypeScript, GSAP, Framer Motion, and Three.js. I'm proficient with modern CSS approaches like Tailwind, and always exploring new tools that can elevate my work.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <a href="#contact" className="btn-primary">
-                Let's Connect
-              </a>
-              
-              <a href="#projects" className="btn-secondary">
-                See My Work
-              </a>
-            </div>
-          </div>
-          
-          <div className="flex-1 order-1 lg:order-2" ref={imageBoxRef}>
-            <div className="image-reveal rounded-2xl overflow-hidden">
-              <div className="about-image relative w-full overflow-hidden rounded-2xl transform transition-transform duration-500">
-                <img 
-                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=2072" 
-                  alt="Developer working on code" 
-                  className="w-full object-cover rounded-2xl"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 mix-blend-overlay"></div>
-                
-                {/* Code overlay */}
-                <div className="about-code absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col justify-center p-8 opacity-0 hover:opacity-100 transition-opacity duration-300">
-                  <div className="code-panel font-mono text-xs md:text-sm text-white/90 overflow-hidden">
-                    <div className="flex items-center mb-3">
-                      <div className="w-3 h-3 rounded-full bg-red-400 mr-2"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-400 mr-2"></div>
-                      <div className="flex-1 text-center">
-                        <span className="text-xs text-white/60">developer.js</span>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="code-line overflow-hidden whitespace-nowrap">
-                        <span className="text-purple-400">const</span> <span className="text-blue-400">developer</span> = {"{"}
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-4">
-                        <span className="text-green-400">passion:</span> <span className="text-yellow-400">'Creating engaging experiences'</span>,
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-4">
-                        <span className="text-green-400">skills:</span> [<span className="text-yellow-400">'React'</span>, <span className="text-yellow-400">'GSAP'</span>, <span className="text-yellow-400">'Three.js'</span>],
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-4">
-                        <span className="text-green-400">approach:</span> <span className="text-yellow-400">'Creative problem-solving'</span>,
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-4">
-                        <span className="text-purple-400">createMagic:</span> () {"=>"} {"{"}
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-8">
-                        <span className="text-purple-400">return</span> <span className="text-yellow-400">'✨ Exceptional experiences ✨'</span>;
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap pl-4">
-                        {"}"}
-                      </div>
-                      <div className="code-line overflow-hidden whitespace-nowrap">
-                        {"}"};
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="show"
+        className="container-section relative z-10"
+      >
+        {/* Header */}
+        <div className="mx-auto max-w-3xl text-center mb-14">
+          <motion.div
+            variants={fadeUp}
+            className="about-eyebrow inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm text-muted-foreground"
+          >
+            <TrendingUp className="h-4 w-4" />
+            About Paulo
+          </motion.div>
+
+          <h2 className="about-heading heading-lg mt-5">
+            <span className="text-gradient">Not just a developer—</span>
+            <br className="hidden sm:block" />
+            <span className="text-foreground">your business partner.</span>
+          </h2>
+
+          <p className="about-sub subheading mt-4 text-muted-foreground">
+            I align technology with business goals—solving real problems,
+            earning trust, and helping owners grow through reliable,
+            conversion-focused web experiences.
+          </p>
         </div>
-        
-        <div className="mt-32">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full bg-secondary/10">
-              <Zap size={16} className="text-secondary" />
-              <span className="text-sm font-medium">My Expertise</span>
-            </div>
-            <h2 className="heading-md mb-6">What I <span className="text-gradient">Do</span></h2>
-            <p className="subheading max-w-2xl mx-auto">
-              I specialize in creating engaging web experiences with attention to detail and cutting-edge technologies.
-            </p>
-          </div>
-          
-          <div className="skills-container grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="skill-card glass-card p-8 flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Layout size={28} className="text-primary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-gradient transition-all duration-300">UI/UX Development</h3>
-              <p className="text-muted-foreground">
-                Creating beautiful, intuitive interfaces that provide exceptional user experiences across all devices.
-              </p>
-            </div>
-            
-            <div className="skill-card glass-card p-8 flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
-              <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Code size={28} className="text-secondary" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-gradient transition-all duration-300">Modern Web Development</h3>
-              <p className="text-muted-foreground">
-                Building responsive websites with React, TypeScript, and modern CSS frameworks like Tailwind.
-              </p>
-            </div>
-            
-            <div className="skill-card glass-card p-8 flex flex-col items-center text-center group hover:shadow-xl transition-all duration-500">
-              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Sparkles size={28} className="text-accent" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-gradient transition-all duration-300">Interactive Animations</h3>
-              <p className="text-muted-foreground">
-                Creating engaging motion and interactions using GSAP and 3D animations to enhance user engagement.
-              </p>
-            </div>
-          </div>
-          
-          <div className="mt-16 pt-16 border-t border-border">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-4">Technical Skillset</h3>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                A glimpse into my technical toolbox, constantly expanding and evolving.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {skills.map((skillGroup, groupIndex) => (
-                <div key={groupIndex} className="glass-card overflow-hidden">
-                  <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-transparent">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      {groupIndex === 0 && <Monitor size={16} />}
-                      {groupIndex === 1 && <Sparkles size={16} />}
-                      {groupIndex === 2 && <Code size={16} />}
-                      {skillGroup.category}
-                    </h4>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {skillGroup.items.map((skill, index) => (
-                        <span 
-                          key={index}
-                          className="text-xs py-1 px-3 rounded-full bg-primary/5 border border-primary/10 font-medium"
+
+        {/* Main Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+          {/* LEFT: Identity Card */}
+          <motion.div variants={popIn} className="lg:col-span-2 space-y-8">
+            <Card className="glass-card rounded-2xl shadow-lg border-border/60">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-2xl font-bold">
+                  Paulo L. Abaquita
+                </CardTitle>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <Badge variant="secondary">Creative</Badge>
+                  <Badge className="bg-green-500/15 text-green-700 border-green-500/20">
+                    Ready to Help You Grow
+                  </Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <Globe className="w-3.5 h-3.5" />
+                    Philippines
+                  </Badge>
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-3">
+                  <Target className="w-5 h-5 text-primary" />
+                  <p className="text-sm text-muted-foreground">
+                    Imagine a website that doesn’t just look good—it works hard for you.
+                    I help turn your visitors into customers and your traffic into
+                    real business growth.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border p-4">
+                  <p className="font-medium mb-1">What clients love</p>
+                  <p className="text-sm text-muted-foreground">
+                    Stress-free collaboration, clear communication, and results that
+                    make the investment worth it. You’ll always know where things stand.
+                  </p>
+                </div>
+
+                <div className="rounded-xl border p-4">
+                  <p className="font-medium mb-1">The process that works</p>
+                  <p className="text-sm text-muted-foreground">
+                    Discovery → Strategy → Build → Refine. Every step is designed to
+                    save you time, reduce headaches, and deliver measurable outcomes
+                    you can actually use to grow.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+
+            {/* NEW: Secondary Container below */}
+            <Card className="rounded-2xl shadow-lg border-border/60 bg-gradient-to-br from-muted/30 to-background">
+              <CardContent className="p-6">
+                <p className="text-lg font-semibold mb-2">
+                  More Than Just a Website
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  A website shouldn’t be an expense—it should be an <span className="font-semibold">investment that pays you back</span>.
+                  I build sites that attract the right visitors, earn their trust, and turn them into paying customers.
+                  The result? <span className="font-semibold">More leads, more sales, and more time to focus on growing your business</span> instead of chasing customers.
+                </p>
+              </CardContent>
+
+            </Card>
+          </motion.div>
+
+          {/* RIGHT: Narrative + Traits */}
+          <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
+            <Card className="rounded-2xl shadow-lg border-border/60">
+              <CardContent className="p-6 lg:p-8">
+                <motion.p
+                  variants={fadeUp}
+                  className="text-lg text-muted-foreground leading-relaxed"
+                >
+                  Every day, businesses lose customers to competitors—not because they’re
+                  better, but because their <span className="font-semibold">website does
+                    the selling for them</span>. I build websites that work as your{" "}
+                  <span className="font-semibold">24/7 business partner</span>: attracting
+                  the right audience, building trust instantly, and converting visitors
+                  into sales. Whether it’s a professional business site, a powerful
+                  e-commerce store, or a stunning portfolio, I focus on creating{" "}
+                  <span className="font-semibold">clear, effective solutions</span> that
+                  drive measurable growth and help your business thrive.
+                </motion.p>
+
+
+                {/* Traits with Magnetic Effect + Rectangle Pastel BG */}
+                <div className="relative mt-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {TRAITS.map((t, i) => {
+                      const traitRef = useMagneticElement({ strength: 0.12 }); // reduced sensitivity
+                      return (
+                        <div
+                          key={i}
+                          ref={traitRef as React.RefObject<HTMLDivElement>}
+                          className={`trait-chip relative flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium shadow-sm hover:shadow-md transition-shadow ${t.bg}`}
                         >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
+                          <span className="text-lg">{t.emoji}</span>
+                          <span className="whitespace-normal">{t.label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ))}
+              </CardContent>
+            </Card>
+
+            {/* Trust & Impact Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <motion.div variants={popIn}>
+                <Card className="rounded-2xl border-border/60">
+                  <CardContent className="p-5 flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Trusted</p>
+                      <p className="text-sm text-muted-foreground">
+                        No surprises—clear pricing, on-time delivery.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div variants={popIn}>
+                <Card className="rounded-2xl border-border/60">
+                  <CardContent className="p-5 flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-primary mt-0.5" />
+                    <div>
+                      <p className="font-medium">Results</p>
+                      <p className="text-sm text-muted-foreground">
+                        SEO, speed, UX—all built to grow your business.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div variants={popIn}>
+                <Card className="rounded-2xl border-border/60">
+                  <CardContent className="p-5 flex items-start gap-3">
+                    <Handshake className="w-5 h-5 text-secondary mt-0.5" />
+                    <div>
+                      <p className="font-medium">Smooth Process</p>
+                      <p className="text-sm text-muted-foreground">
+                        Fast, friendly, and hassle-free collaboration.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
-          </div>
+
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 };

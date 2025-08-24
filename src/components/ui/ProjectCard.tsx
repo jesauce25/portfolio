@@ -2,23 +2,16 @@
 import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ArrowUpRight, ExternalLink, Github, MessageCircle } from "lucide-react";
-
-export type ProjectType = {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-  link: string;
-  github?: string;
-};
+import { ProjectType } from "@/data/projects";
+import { filterOptions } from "@/data/projects"; // Import filterOptions
 
 interface ProjectCardProps {
   project: ProjectType;
   index: number;
+  onClick: (project: ProjectType) => void; // Add onClick prop
 }
 
-const ProjectCard = ({ project, index }: ProjectCardProps) => {
+const ProjectCard = ({ project, index, onClick }: ProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -29,10 +22,6 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
   // Advanced hover effects with GSAP
   useEffect(() => {
     if (!cardRef.current || !imageRef.current || !contentRef.current) return;
-    
-    // Skip setup if already initialized to prevent animation repetition
-    if (hasInitializedRef.current) return;
-    hasInitializedRef.current = true;
     
     const card = cardRef.current;
     const image = imageRef.current;
@@ -205,7 +194,11 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
   return (
     <div 
       ref={cardRef}
-      className="group glass-card overflow-hidden will-change-transform transition-all duration-300 h-full flex flex-col interactive"
+      className="group glass-card overflow-hidden will-change-transform transition-all duration-300 h-full flex flex-col interactive cursor-pointer" 
+      onClick={() => {
+        console.log("ProjectCard clicked:", project.title);
+        onClick(project);
+      }} // Use the passed onClick prop and log
     >
       {/* Highlight effect div */}
       <div className="card-highlight absolute w-[150px] h-[150px] rounded-full bg-white blur-3xl opacity-0 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
@@ -215,28 +208,48 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
           ref={imageRef}
           className="absolute inset-0 will-change-transform"
         >
-          <img 
-            src={project.image} 
-            alt={project.title} 
-            className="w-full h-full object-cover"
-          />
+          {project.mediaType === "video" ? (
+            <video
+              src={project.image}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={project.image}
+              alt={project.title}
+              className="w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         </div>
         
         {/* Animated project tags */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
-          {project.tags.map((tag, i) => (
-            <span 
-              key={i} 
-              className="text-xs py-1 px-3 rounded-full bg-white/90 text-foreground backdrop-blur-sm font-medium shadow-sm transform transition-transform duration-300"
-              style={{
-                transform: isHovered ? `translateY(${i * 5}px) scale(1.05)` : 'translateY(0) scale(1)',
-                transition: `transform 0.3s ease ${i * 0.05}s`
-              }}
-            >
-              {tag}
-            </span>
-          ))}
+          {project.tags.map((tag, i) => {
+            const isCategoryTag = filterOptions.includes(tag); // Check if tag is a category
+            const tagClassName = `text-xs py-1 px-3 rounded-full backdrop-blur-sm font-medium shadow-sm transform transition-transform duration-300 ${isCategoryTag ? 'text-white' : 'bg-white/90 text-foreground'}`;
+            const tagStyle = isCategoryTag ? {
+              background: 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)))',
+              transform: isHovered ? `translateY(${i * 5}px) scale(1.05)` : 'translateY(0) scale(1)',
+              transition: `transform 0.3s ease ${i * 0.05}s, background 0.3s ease`
+            } : {
+              transform: isHovered ? `translateY(${i * 5}px) scale(1.05)` : 'translateY(0) scale(1)',
+              transition: `transform 0.3s ease ${i * 0.05}s`
+            };
+            return (
+              <span 
+                key={i} 
+                className={tagClassName}
+                style={tagStyle}
+              >
+                {tag}
+              </span>
+            );
+          })}
         </div>
       </div>
       
@@ -258,6 +271,7 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
             target="_blank" 
             rel="noopener noreferrer" 
             className="inline-flex items-center justify-center gap-2 font-semibold text-primary hover:text-primary/80 transition-colors"
+            onClick={(e) => e.stopPropagation()} // Prevent modal from opening when clicking link
           >
             View Live <ExternalLink size={16} />
           </a>
@@ -268,6 +282,7 @@ const ProjectCard = ({ project, index }: ProjectCardProps) => {
               target="_blank" 
               rel="noopener noreferrer" 
               className="inline-flex items-center justify-center gap-2 font-semibold text-foreground/70 hover:text-foreground transition-colors"
+              onClick={(e) => e.stopPropagation()} // Prevent modal from opening when clicking link
             >
               <Github size={16} />
             </a>
