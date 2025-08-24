@@ -115,7 +115,6 @@ const Projects = () => {
     setCurrent((prev) => (prev + 1) % carouselItems.length);
   const prevSlide = () =>
     setCurrent((prev) => (prev - 1 + carouselItems.length) % carouselItems.length);
-
   return (
     <section id="projects" className="py-32 relative overflow-hidden">
       {/* Parent Background with Gradient Split */}

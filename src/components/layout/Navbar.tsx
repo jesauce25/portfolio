@@ -66,17 +66,25 @@ const Navbar = () => {
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`nav-item text-base font-medium transition-colors ${ 
-                location.pathname === item.path ? 'text-primary' : 'hover:text-primary/70'
-              } ${item.name === "Hire Me" ? "btn-primary py-2 px-5 h-auto !text-white" : ""}`}
-            >
-              {item.name}
-            </Link>
-          ))}
+        <Link to="/home" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Home
+          </Link>
+          <Link to="/about" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            About
+          </Link>
+          <Link to="/projects" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Projects
+          </Link>
+        
+          <Link to="/services" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Services
+          </Link>
+          <Link to="/testimonials" className="nav-item text-base font-medium hover:text-primary/70 transition-colors">
+            Testimonials
+          </Link>
+          <Link to="/hire" className="nav-item text-base font-medium btn-primary py-2 px-5 h-auto !text-white">
+            Hire Me
+          </Link>
         </div>
         
         <button 
@@ -112,18 +120,48 @@ const Navbar = () => {
           </div>
           
           <div className="flex flex-col gap-8 mt-16 items-center">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`text-2xl font-medium ${
-                  location.pathname === item.path ? 'text-primary' : ''
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
+            <Link 
+              to="/about" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              About
+            </Link>
+            <Link 
+              to="/projects" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Projects
+            </Link>
+            <Link 
+              to="/contact" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Contact
+            </Link>
+            <Link 
+              to="/services" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Services
+            </Link>
+            <Link 
+              to="/testimonials" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Testimonials
+            </Link>
+            <Link 
+              to="/hire" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Hire Me
+            </Link>
           </div>
         </div>
       </div>

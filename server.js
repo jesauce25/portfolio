@@ -6,7 +6,8 @@ import cors from 'cors';
 const app = express();
 const port = process.env.PORT || 3000;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend('re_2x24tYad_6LjeTTJjwjPUkWkBPNvMgLQz');
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
 const corsOptions = {
   origin: '*',
@@ -33,7 +34,7 @@ app.post('/api/send-email', async (req, res) => {
 
   try {
     const data = await resend.emails.send({
-      from: 'portfolio@resend.dev', // Must be a verified domain in Resend
+      from: 'onboarding@resend.dev', // Must be a verified domain in Resend
       to: 'pauloabaquita098956@gmail.com', // Your target email address
       subject: `New message from ${name} (${email})`,
       html: `<p><strong>Name:</strong> ${name}</p>

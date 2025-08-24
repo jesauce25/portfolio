@@ -6,11 +6,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Home from "./pages/Index";
 import AboutPage from "./pages/AboutPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import HireMePage from "./pages/HireMePage";
 import ServicesPage from "./pages/ServicesPage";
 import TestimonialsPage from "./pages/TestimonialsPage";
+import About from "./pages/About";
+import Projects from "./pages/Projects";
 import { useCursorFollowAnimation } from "@/hooks/useGSAP";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
@@ -67,11 +70,13 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/testimonials" element={<TestimonialsPage />} />
             <Route path="/hire" element={<HireMePage />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
