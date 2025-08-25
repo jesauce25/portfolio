@@ -1,6 +1,6 @@
+import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ServiceType } from "@/data/projects";
-import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 
 interface ServiceCardProps {
@@ -8,7 +8,10 @@ interface ServiceCardProps {
   index: number; 
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ service, index }) => {
+const ServiceCard: React.FC<ServiceCardProps> = React.memo(({
+  service,
+  index
+}) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -194,12 +197,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, index }) => {
               muted
               playsInline
               className="w-full h-full object-cover"
-            />
+              preload="metadata"
+              loading="lazy"
+            ></video>
           ) : (
             <img 
               src={service.image} 
               alt={service.name} 
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -246,6 +252,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, index }) => {
       <div className={`absolute inset-0 border-2 border-transparent rounded-[20px] transition-all duration-500 ${isHovered ? 'border-primary/30 shadow-[0_0_15px_rgba(142,53,239,0.3)]' : ''}`}></div>
     </div>
   );
-};
+});
 
 export default ServiceCard;

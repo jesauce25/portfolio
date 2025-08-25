@@ -4,23 +4,24 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Home from "./pages/Index";
-import AboutPage from "./pages/AboutPage";
-import ProjectsPage from "./pages/ProjectsPage";
-import HireMePage from "./pages/HireMePage";
-import ServicesPage from "./pages/ServicesPage";
-import TestimonialsPage from "./pages/TestimonialsPage";
-import About from "./pages/About";
-import Projects from "./pages/Projects";
+import React, { lazy, Suspense } from "react";
 import { useCursorFollowAnimation } from "@/hooks/useGSAP";
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import Chatbot from "@/components/layout/Chatbot";
+import ProjectsPage from "./pages/ProjectsPage"; // Direct import
+import ServicesPage from "./pages/ServicesPage"; // Direct import
 
 const queryClient = new QueryClient();
   
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+// const ProjectsPage = lazy(() => import("./pages/ProjectsPage")); // Comment out lazy import
+const HireMePage = lazy(() => import("./pages/HireMePage"));
+// const ServicesPage = lazy(() => import("./pages/ServicesPage")); // Comment out lazy import
+const TestimonialsPage = lazy(() => import("./pages/TestimonialsPage"));
+
 const App = () => {
   const cursorRef = useCursorFollowAnimation();
   const cursorTextRef = useRef<HTMLDivElement>(null);
@@ -68,17 +69,19 @@ const App = () => {
         </div>
 
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/testimonials" element={<TestimonialsPage />} />
-            <Route path="/hire" element={<HireMePage />} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/home" element={<Index />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/testimonials" element={<TestimonialsPage />} />
+              <Route path="/hire" element={<HireMePage />} />
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
       <Chatbot />

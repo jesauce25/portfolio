@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion, useAnimation, Variants } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -61,32 +60,11 @@ const TRAITS: Trait[] = [
 
 
 /** -----------------------------------------------
- * Framer Motion Variants
- * ----------------------------------------------- */
-const sectionVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { when: "beforeChildren", staggerChildren: 0.15 },
-  },
-};
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80 } },
-};
-
-const popIn: Variants = {
-  hidden: { opacity: 0, scale: 0.96 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
-};
-
-/** -----------------------------------------------
  * About Section
  * ----------------------------------------------- */
 const About = () => {
   const aboutRef = useRef<HTMLDivElement>(null);
-  const controls = useAnimation();
+  // const controls = useAnimation();
 
   useEffect(() => {
     if (!aboutRef.current) return;
@@ -94,61 +72,76 @@ const About = () => {
     const ctx = gsap.context(() => {
       ScrollTrigger.refresh();
 
+      const mainContentTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: aboutRef.current,
+          start: "top 80%",
+          once: true,
+        }
+      });
+
+      mainContentTl.fromTo(".about-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" });
+      mainContentTl.fromTo(".about-heading", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }, ">-0.6"); // Animate after eyebrow, with overlap
+      mainContentTl.fromTo(".about-sub", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }, ">-0.7"); // Animate after heading, with overlap
+
+      // Animate left column (Identity Card) with popIn effect
       gsap.fromTo(
-        ".about-eyebrow",
-        { y: 20, opacity: 0 },
+        ".lg\\:col-span-2.space-y-8 > div", // Target children of this div
+        { opacity: 0, scale: 0.96 },
         {
-          y: 0,
           opacity: 1,
-          duration: 0.8,
-          ease: "power3.out",
+          scale: 1,
+          duration: 0.5,
+          stagger: 0.15, // Stagger effect for multiple cards
+          ease: "power2.out",
           scrollTrigger: {
-            trigger: aboutRef.current,
+            trigger: ".lg\\:col-span-2.space-y-8",
             start: "top 80%",
             once: true,
           },
         }
       );
 
+      // Animate right column (Narrative + Traits) with fadeUp effect
       gsap.fromTo(
-        ".about-heading",
-        { y: 30, opacity: 0 },
+        ".lg\\:col-span-3.space-y-6 > div", // Target children of this div
+        { opacity: 0, y: 24 },
         {
-          y: 0,
           opacity: 1,
-          duration: 0.9,
-          ease: "power3.out",
-          delay: 0.1,
+          y: 0,
+          duration: 0.8,
+          ease: "power2.out",
+          stagger: 0.15, // Stagger effect for multiple elements
           scrollTrigger: {
-            trigger: aboutRef.current,
-            start: "top 78%",
+            trigger: ".lg\\:col-span-3.space-y-6",
+            start: "top 80%",
             once: true,
           },
         }
       );
 
+      // Animate the individual cards in the "Trust & Impact Row" with popIn effect
       gsap.fromTo(
-        ".about-sub",
-        { y: 24, opacity: 0 },
+        ".grid-cols-1.md\\:grid-cols-3.gap-4 > div", // Target individual cards
+        { opacity: 0, scale: 0.96 },
         {
-          y: 0,
           opacity: 1,
-          duration: 0.9,
-          ease: "power3.out",
-          delay: 0.2,
+          scale: 1,
+          duration: 0.5,
+          stagger: 0.1, // Stagger effect for multiple cards
+          ease: "power2.out",
           scrollTrigger: {
-            trigger: aboutRef.current,
-            start: "top 75%",
+            trigger: ".grid-cols-1.md\\:grid-cols-3.gap-4",
+            start: "top 85%",
             once: true,
           },
         }
       );
+
     }, aboutRef);
 
-    controls.start("show");
-
     return () => ctx.revert();
-  }, [controls]);
+  }, []);
 
   return (
     <section
@@ -163,21 +156,20 @@ const About = () => {
         <div className="absolute bottom-10 left-1/4 h-60 w-60 rounded-full bg-pink-500/10 blur-2xl" />
       </div>
 
-      <motion.div
-        variants={sectionVariants}
-        initial="hidden"
-        animate="show"
+      <div
         className="container-section relative z-10"
       >
         {/* Header */}
         <div className="mx-auto max-w-3xl text-center mb-14">
-          <motion.div
-            variants={fadeUp}
+          <div
+            ref={el => {
+              if (el) gsap.fromTo(el, { opacity: 0, y: 24 }, { opacity: 1, y: 0, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+            }}
             className="about-eyebrow inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm text-muted-foreground"
           >
             <TrendingUp className="h-4 w-4" />
             About Paulo
-          </motion.div>
+          </div>
 
           <h2 className="about-heading heading-lg mt-5">
             <span className="text-gradient">Not just a developer—</span>
@@ -195,7 +187,11 @@ const About = () => {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
           {/* LEFT: Identity Card */}
-          <motion.div variants={popIn} className="lg:col-span-2 space-y-8">
+          <div
+            ref={el => {
+              if (el) gsap.fromTo(el, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+            }}
+            className="lg:col-span-2 space-y-8">
             <Card className="glass-card rounded-2xl shadow-lg border-border/60">
               <CardHeader className="pb-3">
                 <CardTitle className="text-2xl font-bold">
@@ -257,14 +253,20 @@ const About = () => {
               </CardContent>
 
             </Card>
-          </motion.div>
+          </div>
 
           {/* RIGHT: Narrative + Traits */}
-          <motion.div variants={fadeUp} className="lg:col-span-3 space-y-6">
+          <div
+            ref={el => {
+              if (el) gsap.fromTo(el, { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: 0.15, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+            }}
+            className="lg:col-span-3 space-y-6">
             <Card className="rounded-2xl shadow-lg border-border/60">
               <CardContent className="p-6 lg:p-8">
-                <motion.p
-                  variants={fadeUp}
+                <p
+                  ref={el => {
+                    if (el) gsap.fromTo(el, { opacity: 0, y: 24 }, { opacity: 1, y: 0, scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+                  }}
                   className="text-lg text-muted-foreground leading-relaxed"
                 >
                   Every day, businesses lose customers to competitors—not because they’re
@@ -276,7 +278,7 @@ const About = () => {
                   e-commerce store, or a stunning portfolio, I focus on creating{" "}
                   <span className="font-semibold">clear, effective solutions</span> that
                   drive measurable growth and help your business thrive.
-                </motion.p>
+                </p>
 
 
                 {/* Traits with Magnetic Effect + Rectangle Pastel BG */}
@@ -301,8 +303,12 @@ const About = () => {
             </Card>
 
             {/* Trust & Impact Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <motion.div variants={popIn}>
+            <div
+              ref={el => {
+                if (el) gsap.fromTo(el, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%", once: true } });
+              }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
                 <Card className="rounded-2xl border-border/60">
                   <CardContent className="p-5 flex items-start gap-3">
                     <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5" />
@@ -314,9 +320,9 @@ const About = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
 
-              <motion.div variants={popIn}>
+              <div>
                 <Card className="rounded-2xl border-border/60">
                   <CardContent className="p-5 flex items-start gap-3">
                     <TrendingUp className="w-5 h-5 text-primary mt-0.5" />
@@ -328,9 +334,9 @@ const About = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
 
-              <motion.div variants={popIn}>
+              <div>
                 <Card className="rounded-2xl border-border/60">
                   <CardContent className="p-5 flex items-start gap-3">
                     <Handshake className="w-5 h-5 text-secondary mt-0.5" />
@@ -342,12 +348,12 @@ const About = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             </div>
 
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 };

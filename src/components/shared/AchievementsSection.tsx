@@ -61,7 +61,7 @@ const AchievementsSection = () => {
         {achievementsData.map((achievement, index) => (
           <div key={index} className="achievement-card glass-card p-6 rounded-lg shadow-lg flex flex-col items-center text-center">
             <div className="w-full h-40 overflow-hidden rounded-lg mb-4">
-              <img src={achievement.image} alt={achievement.title} className="w-full h-full object-cover" />
+              <img src={achievement.image} alt={achievement.title} className="w-full h-full object-cover" loading="lazy" />
             </div>
             <span className="text-sm font-semibold text-primary mb-2">{achievement.year}</span>
             <h3 className="text-xl font-bold mb-2">{achievement.title}</h3>

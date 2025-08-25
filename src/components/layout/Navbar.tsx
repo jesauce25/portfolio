@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useGSAP } from "@/hooks/useGSAP";
 import gsap from "gsap";
@@ -27,19 +27,19 @@ const Navbar = () => {
     );
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  const handleScroll = useCallback(() => {
+    const isScrolled = window.scrollY > 10;
+    if (isScrolled !== scrolled) {
+      setScrolled(isScrolled);
+    }
   }, [scrolled]);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const toggleMenu = useCallback(() => setIsOpen(!isOpen), [isOpen]);
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -120,6 +120,13 @@ const Navbar = () => {
           </div>
           
           <div className="flex flex-col gap-8 mt-16 items-center">
+          <Link 
+              to="/home" 
+              className="text-2xl font-medium"
+              onClick={() => setIsOpen(false)}
+            >
+              Home
+            </Link>
             <Link 
               to="/about" 
               className="text-2xl font-medium"
@@ -134,13 +141,7 @@ const Navbar = () => {
             >
               Projects
             </Link>
-            <Link 
-              to="/contact" 
-              className="text-2xl font-medium"
-              onClick={() => setIsOpen(false)}
-            >
-              Contact
-            </Link>
+           
             <Link 
               to="/services" 
               className="text-2xl font-medium"

@@ -1,8 +1,11 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Code, ChevronLeft, ChevronRight } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const carouselItems = [
   {
@@ -115,6 +118,19 @@ const Projects = () => {
     setCurrent((prev) => (prev + 1) % carouselItems.length);
   const prevSlide = () =>
     setCurrent((prev) => (prev - 1 + carouselItems.length) % carouselItems.length);
+
+  const carouselItemRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (carouselItemRef.current) {
+      gsap.fromTo(
+        carouselItemRef.current,
+        { opacity: 0, x: 80 },
+        { opacity: 1, x: 0, duration: 0.6, ease: "easeOut" }
+      );
+    }
+  }, [current]);
+
   return (
     <section id="projects" className="py-32 relative overflow-hidden">
       {/* Parent Background with Gradient Split */}
@@ -125,11 +141,10 @@ const Projects = () => {
 
       <div className="container-section relative z-10">
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+        <div
+          ref={el => {
+            if (el) gsap.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+          }}
           className="text-center mb-20"
         >
           <div className="inline-flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10">
@@ -148,7 +163,7 @@ const Projects = () => {
             <span className="font-semibold">24/7 storefront 🏪</span>, your digital
             sales rep 🤖, and your trust-builder 🤝.
           </p>
-        </motion.div>
+        </div>
 
         {/* Carousel */}
         <div
@@ -156,65 +171,62 @@ const Projects = () => {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0, x: 80 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -80 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="p-8 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/30 shadow-lg"
-            >
-              <h3 className="font-bold text-2xl mb-6 text-center gradient-text">
-                {carouselItems[current].title}
-                <span className="text-primary">{carouselItems[current].emoji}</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* No Website */}
-                <div className="relative p-4 rounded-2xl overflow-hidden border border-red-300 bg-gradient-to-t from-red-600/60 to-red-200/40 backdrop-blur-sm shadow-md">
-                  {/* Fixed image container with portrait aspect ratio, no margins */}
-                  <div className="relative w-full aspect-[3/5] rounded-lg overflow-hidden mb-3">
-                    <img
-                      src={carouselItems[current].noWebsite.img}
-                      alt="No Website"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="relative z-10 bg-red-900/70 text-white rounded-lg p-3 mt-2">
-                    <p className="text-xs font-bold uppercase mb-1">
-                      ❌ No Website
-                    </p>
-                    <p className="text-sm">
-                      {carouselItems[current].noWebsite.text}
-                    </p>
-                  </div>
+          <div
+            key={current}
+            ref={carouselItemRef}
+            className="p-8 rounded-3xl bg-white/50 backdrop-blur-2xl border border-white/30 shadow-lg"
+          >
+            <h3 className="font-bold text-2xl mb-6 text-center gradient-text">
+              {carouselItems[current].title}
+              <span className="text-primary">{carouselItems[current].emoji}</span>
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* No Website */}
+              <div className="relative p-4 rounded-2xl overflow-hidden border border-red-300 bg-gradient-to-t from-red-600/60 to-red-200/40 backdrop-blur-sm shadow-md">
+                {/* Fixed image container with portrait aspect ratio, no margins */}
+                <div className="relative w-full aspect-[3/5] rounded-lg overflow-hidden mb-3">
+                  <img
+                    src={carouselItems[current].noWebsite.img}
+                    alt="No Website"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
-
-                {/* With Website */}
-                <div className="relative p-4 rounded-2xl overflow-hidden border border-green-300 bg-gradient-to-t from-green-600/60 to-green-200/40 backdrop-blur-sm shadow-md">
-                  {/* Fixed image container with portrait aspect ratio, no margins */}
-                  <div className="relative w-full aspect-[3/5] rounded-lg overflow-hidden mb-3">
-                    <img
-                      src={carouselItems[current].withWebsite.img}
-                      alt="With Website"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="relative z-10 bg-green-900/70 text-white rounded-lg p-3 mt-2">
-                    <p className="text-xs font-bold uppercase mb-1">
-                      ✅ With Website
-                    </p>
-                    <p className="text-sm">
-                      {carouselItems[current].withWebsite.text}
-                    </p>
-                  </div>
+                <div className="relative z-10 bg-red-900/70 text-white rounded-lg p-3 mt-2">
+                  <p className="text-xs font-bold uppercase mb-1">
+                    ❌ No Website
+                  </p>
+                  <p className="text-sm">
+                    {carouselItems[current].noWebsite.text}
+                  </p>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-primary text-center">
-                {carouselItems[current].result}
-              </p>
-            </motion.div>
-          </AnimatePresence>
+
+              {/* With Website */}
+              <div className="relative p-4 rounded-2xl overflow-hidden border border-green-300 bg-gradient-to-t from-green-600/60 to-green-200/40 backdrop-blur-sm shadow-md">
+                {/* Fixed image container with portrait aspect ratio, no margins */}
+                <div className="relative w-full aspect-[3/5] rounded-lg overflow-hidden mb-3">
+                  <img
+                    src={carouselItems[current].withWebsite.img}
+                    alt="With Website"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="relative z-10 bg-green-900/70 text-white rounded-lg p-3 mt-2">
+                  <p className="text-xs font-bold uppercase mb-1">
+                    ✅ With Website
+                  </p>
+                  <p className="text-sm">
+                    {carouselItems[current].withWebsite.text}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-primary text-center">
+              {carouselItems[current].result}
+            </p>
+          </div>
 
           {/* Pagination Dots */}
           <div className="flex justify-center gap-2 mt-6">
@@ -231,11 +243,10 @@ const Projects = () => {
         </div>
 
         {/* Closing Argument */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
+        <div
+          ref={el => {
+            if (el) gsap.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 80%", once: true } });
+          }}
           className="text-center mt-16"
         >
           <p className="text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
@@ -247,7 +258,7 @@ const Projects = () => {
             transform your ideas into an online presence that{" "}
             <span className="font-semibold text-secondary">works for you 🌟</span>.
           </p>
-        </motion.div>
+        </div>
       </div>
 
       {/* Nav Arrows */}

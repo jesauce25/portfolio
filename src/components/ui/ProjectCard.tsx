@@ -1,5 +1,5 @@
 
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import gsap from "gsap";
 import { ArrowUpRight, ExternalLink, Github, MessageCircle } from "lucide-react";
 import { ProjectType } from "@/data/projects";
@@ -11,7 +11,11 @@ interface ProjectCardProps {
   onClick: (project: ProjectType) => void; // Add onClick prop
 }
 
-const ProjectCard = ({ project, index, onClick }: ProjectCardProps) => {
+const ProjectCard = React.memo(({
+  project,
+  index,
+  onClick
+}: ProjectCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -195,10 +199,10 @@ const ProjectCard = ({ project, index, onClick }: ProjectCardProps) => {
     <div 
       ref={cardRef}
       className="group glass-card overflow-hidden will-change-transform transition-all duration-300 h-full flex flex-col interactive cursor-pointer" 
-      onClick={() => {
+      onClick={useCallback(() => {
         console.log("ProjectCard clicked:", project.title);
         onClick(project);
-      }} // Use the passed onClick prop and log
+      }, [onClick, project])} // Use the passed onClick prop and log
     >
       {/* Highlight effect div */}
       <div className="card-highlight absolute w-[150px] h-[150px] rounded-full bg-white blur-3xl opacity-0 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
@@ -216,12 +220,15 @@ const ProjectCard = ({ project, index, onClick }: ProjectCardProps) => {
               muted
               playsInline
               className="w-full h-full object-cover"
-            />
+              preload="metadata"
+              loading="lazy"
+            ></video>
           ) : (
             <img
               src={project.image}
               alt={project.title}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -300,6 +307,6 @@ const ProjectCard = ({ project, index, onClick }: ProjectCardProps) => {
       <div className={`absolute inset-0 border-2 border-transparent rounded-[20px] transition-all duration-500 ${isHovered ? 'border-primary/30 shadow-[0_0_15px_rgba(142,53,239,0.3)]' : ''}`}></div>
     </div>
   );
-};
+});
 
 export default ProjectCard;

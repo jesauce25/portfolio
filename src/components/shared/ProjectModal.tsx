@@ -59,12 +59,15 @@ const ProjectModal: React.FC<ProjectModalProps> = ({
                       onEnded={(e) => (e.currentTarget.currentTime = 0)}
                       onLoadedData={(e) => (e.currentTarget.currentTime = 0)}
                       onPlay={(e) => (e.currentTarget.currentTime = 0)}
-                    />
+                      preload="metadata"
+                      loading="lazy"
+                    ></video>
                   ) : (
                     <img
                       src={src}
                       alt={`${project.title} image ${index + 1}`}
                       className="max-w-full max-h-full object-contain rounded-md shadow-md"
+                      loading="lazy"
                     />
                   )}
                 </CarouselItem>
