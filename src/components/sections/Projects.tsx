@@ -153,9 +153,11 @@ const Projects = () => {
               Websites That Work for You 🚀
             </span>
           </div>
-          <h2 className="heading-lg mb-6 gradient-text inline-block">
-            Why Every Business Needs a Website 🌐
+          <h2 className="heading-lg mb-6 inline-block">
+            <span className="gradient-text">Why Every Business Needs a Website</span>{" "}
+            <span>🌐</span>
           </h2>
+
           <p className="subheading max-w-3xl mx-auto leading-relaxed">
             A strong online presence is no longer optional — it's{" "}
             <span className="font-semibold text-primary">essential ✅</span>. Your
@@ -234,9 +236,8 @@ const Projects = () => {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`h-3.5 w-3.5 rounded-full transition ${
-                  i === current ? "bg-primary scale-110" : "bg-gray-400"
-                }`}
+                className={`h-3.5 w-3.5 rounded-full transition ${i === current ? "bg-primary scale-110" : "bg-gray-400"
+                  }`}
               />
             ))}
           </div>
